@@ -54,9 +54,9 @@ body{margin:0}
 body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px 56px; }
 .wrap { max-width: 36rem; margin: 0 auto; display: grid; gap: 28px; }
-h1 { font-family: var(--display); font-variation-settings: "SOFT" 100; font-weight: 600; font-size: clamp(2.1rem, calc((100vw - 2.25rem) / 8.4), 3.4rem); line-height: 1.05; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+h1 { font-family: var(--display); font-variation-settings: "SOFT" 100; font-weight: 600; font-size: max(2.1rem, calc(min(100vw - 2.25rem, 36rem) / 8.4)); line-height: 1.05; white-space: nowrap; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
 header { text-align: center; }
-.lede { margin: 10px auto 0; color: var(--muted); max-width: 34ch; font-size: 1.06rem; text-wrap: balance; }
+.lede { margin: 10px auto 0; color: var(--muted); font-size: clamp(1.06rem, calc(min(100vw - 2.25rem, 36rem) / 26), 1.4rem); text-wrap: balance; }
 
 .set { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 18px; }
 

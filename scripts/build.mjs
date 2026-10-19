@@ -38,6 +38,8 @@ const GENRES = [
 const TOPICAL = /^(woman's hour|saturday live|the fifth floor|people fixing the world|elis james and john robins|that peter crouch podcast|the gerry anderson show|the scott mills weekly|the gemma collins podcast|loose ends|midweek|start the week|feedback|click|digital planet|science in action|inside health|health matters|5 live science podcast|what in the world|the conversation|newsjack|the now show|dead ringers|the kitchen caf[eé]|farmwatch|scotland outdoors|tech life)/i;
 const NEWSY = /^(today|pm|the world at one|the world tonight|newsnight|newscast|americast|any questions|any answers|week in westminster|westminster hour|from our own correspondent|the briefing room|world business report|newshour|newsday|the newsroom|5 live news|radio 1 newsbeat|the daily service|sunday|thought for the day|prayer for the day|beyond belief|the media show|front row|you and yours|money box|file on 4|analysis|the context|global news podcast|ukrainecast|the news quiz|the archers|bells on sunday|daily service|in touch|crossing continents|assignment|the inquiry|question time)\b|news|politic|briefing|headline|highlights|gossip|need to know|all day breakfast|smart consumer|election|the week in|football|soccer|cricket|rugby|golf|tennis|formula 1|\bf1\b|sport/i;
 
+// Current-affairs giveaways in an episode title or synopsis
+const TOPICAL_TEXT = /\b(minister|government|parliament|mps?|prime minister|chancellor|the budget|election|ukraine|gaza|brexit|trump|white house|downing street|this week's news)\b/i;
 const clean = (s) => (s || "").replace(/\s+/g, " ").trim();
 const norm = (s) => clean(s).toLowerCase().replace(/[’']/g, "'");
 const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -102,6 +104,7 @@ async function fetchFresh() {
       const show = clean(it.titles?.primary);
       const net = clean(it.network?.short_title);
       if (!show || NEWSY.test(show) || everNames.has(norm(show)) || net === "CBeebies" || net === "Sport") continue;
+      if (TOPICAL_TEXT.test((it.titles?.secondary || "") + " " + (it.synopses?.short || ""))) continue;
       const row = toRow(genre, it);
       if (row) cand.push(row);
     }
