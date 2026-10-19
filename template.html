@@ -41,15 +41,16 @@ body{margin:0}
   --dial: #2b3a33;
   --dial-ink: #f1e6d4;
   --btn-ink: #ffffff;
+  --btn-soft: #eaefe7;
   --display: "Fraunces", Georgia, "Times New Roman", serif;
   --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #131a17; --panel: #1b2420; --ink: #e8ece6; --muted: #9eaca4; --line: #2f3c36;
-  --glow: #eaa25c; --glow-soft: #3a2a1b; --dial: #0d1210; --dial-ink: #f1e6d4; --btn-ink: #1d1209; color-scheme: dark } }
+  --glow: #eaa25c; --glow-soft: #3a2a1b; --dial: #0d1210; --dial-ink: #f1e6d4; --btn-ink: #1d1209; --btn-soft: #222d28; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #131a17; --panel: #1b2420; --ink: #e8ece6; --muted: #9eaca4; --line: #2f3c36;
-  --glow: #eaa25c; --glow-soft: #3a2a1b; --dial: #0d1210; --dial-ink: #f1e6d4; --btn-ink: #1d1209; color-scheme: dark }
+  --glow: #eaa25c; --glow-soft: #3a2a1b; --dial: #0d1210; --dial-ink: #f1e6d4; --btn-ink: #1d1209; --btn-soft: #222d28; color-scheme: dark }
 
 body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px 56px; }
@@ -84,7 +85,7 @@ header { text-align: center; }
 .go { grid-column: 1 / -1; justify-content: center; display: inline-flex; align-items: center; gap: 10px; background: var(--glow); color: var(--btn-ink); text-decoration: none; font-weight: 700; padding: 13px 22px; border-radius: 999px; }
 .go:hover { filter: brightness(1.06); }
 .go[aria-disabled="true"] { opacity: .45; pointer-events: none; }
-.reroll { background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 11px 8px; font: inherit; font-size: 15px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reroll { background: var(--btn-soft); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 11px 8px; font: inherit; font-size: 15px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .reroll:hover { border-color: var(--ink); background: var(--glow-soft); }
 a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-offset: 3px; }
 
