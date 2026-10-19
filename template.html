@@ -81,11 +81,15 @@ header { text-align: center; }
 .title { font-family: var(--display); font-variation-settings: "SOFT" 100; font-weight: 600; font-size: clamp(1.35rem, 5vw, 1.7rem); line-height: 1.2; margin: 0; text-wrap: balance; }
 .syn { margin: 2px 0 0; max-width: 58ch; }
 
-.actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.go { grid-column: 1 / -1; justify-content: center; display: inline-flex; align-items: center; gap: 10px; background: var(--glow); color: var(--btn-ink); text-decoration: none; font-weight: 700; padding: 13px 22px; border-radius: 999px; }
+.actions { display: grid; gap: 10px; }
+.row-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+.row-sub { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.go { justify-content: center; font-size: 15.5px; display: inline-flex; align-items: center; gap: 10px; background: var(--glow); color: var(--btn-ink); text-decoration: none; font-weight: 700; padding: 12px 18px; border-radius: 999px; }
 .go:hover { filter: brightness(1.06); }
 .go[aria-disabled="true"] { opacity: .45; pointer-events: none; }
-.reroll { background: var(--btn-soft); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 11px 8px; font: inherit; font-size: 15px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reroll { background: var(--btn-soft); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 13px 8px; font: inherit; font-size: 16px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.icon-btn { width: 52px; padding: 0; display: inline-grid; place-items: center; }
+.icon-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .reroll:hover { border-color: var(--ink); background: var(--glow-soft); }
 a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-offset: 3px; }
 
@@ -124,10 +128,14 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-
     </div>
 
     <div class="actions">
-      <a class="go" id="go" href="https://www.bbc.co.uk/sounds" target="_blank" rel="noopener">▶ Listen on BBC Sounds</a>
-      <button class="reroll" id="reroll" type="button">Try another</button>
-      <button class="reroll" id="share" type="button">Share</button>
-      <button class="reroll" id="filterToggle" type="button" aria-expanded="false" aria-controls="filterPanel">Filter</button>
+      <div class="row-main">
+        <a class="go" id="go" href="https://www.bbc.co.uk/sounds" target="_blank" rel="noopener">▶ Listen on BBC Sounds</a>
+        <button class="reroll icon-btn" id="share" type="button" aria-label="Share this programme" title="Share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>
+      </div>
+      <div class="row-sub">
+        <button class="reroll" id="reroll" type="button">Try another</button>
+        <button class="reroll" id="filterToggle" type="button" aria-expanded="false" aria-controls="filterPanel">Filter</button>
+      </div>
     </div>
     <div class="chips" id="filterPanel" hidden></div>
   </section>
@@ -229,9 +237,13 @@ shareBtn.addEventListener("click", async () => {
     try { await navigator.share({ title: "Put the Kettle On", text, url }); } catch (err) {}
     return;
   }
-  try { await navigator.clipboard.writeText(url); shareBtn.textContent = "Link copied"; }
-  catch (err) { shareBtn.textContent = "Copy failed"; }
-  setTimeout(() => { shareBtn.textContent = "Share"; }, 1800);
+  const icon = shareBtn.innerHTML;
+  try {
+    await navigator.clipboard.writeText(url);
+    shareBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>';
+    shareBtn.title = "Link copied"; shareBtn.setAttribute("aria-label", "Link copied");
+  } catch (err) { shareBtn.title = "Couldn't copy the link"; }
+  setTimeout(() => { shareBtn.innerHTML = icon; shareBtn.title = "Share"; shareBtn.setAttribute("aria-label", "Share this programme"); }, 1800);
 });
 
 // Filter (remembered on this device only)
