@@ -1,6 +1,6 @@
 // Builds dist/index.html with a fresh random sample of timeless BBC Sounds programmes.
 // If the BBC catalogue can't be reached, it falls back to the snapshot in data/episodes.json.
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, cp } from "node:fs/promises";
 
 const API = "https://rms.api.bbc.co.uk";
 const MIN_EPISODES = 1500;
@@ -136,4 +136,5 @@ const template = await readFile("template.html", "utf8");
 const data = JSON.stringify(episodes).replace(/<\//g, "<\\/");
 await mkdir("dist", { recursive: true });
 await writeFile("dist/index.html", template.replace("/*EPISODES*/[]", data));
+await cp("public", "dist", { recursive: true });
 console.log(`Wrote dist/index.html with ${episodes.length} episodes.`);

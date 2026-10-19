@@ -5,6 +5,21 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="A break from the news: BBC podcasts, stories and comedy, picked at random.">
 <title>Put the Kettle On</title>
+<link rel="canonical" href="https://kettle-radio.github.io/">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#2b3a33">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Put the Kettle On">
+<meta property="og:title" content="Put the Kettle On">
+<meta property="og:description" content="A break from the news: BBC podcasts, stories and comedy, picked at random.">
+<meta property="og:url" content="https://kettle-radio.github.io/">
+<meta property="og:image" content="https://kettle-radio.github.io/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Put the Kettle On: an FM radio dial">
+<meta name="twitter:card" content="summary_large_image">
+<script data-goatcounter="https://kettle-radio.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,20 +79,17 @@ h1 { font-family: var(--display); font-variation-settings: "SOFT" 100; font-weig
 .title { font-family: var(--display); font-variation-settings: "SOFT" 100; font-weight: 600; font-size: clamp(1.35rem, 5vw, 1.7rem); line-height: 1.2; margin: 0; text-wrap: balance; }
 .syn { margin: 2px 0 0; max-width: 58ch; }
 
-.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.go { display: inline-flex; align-items: center; gap: 10px; background: var(--glow); color: var(--btn-ink); text-decoration: none; font-weight: 700; padding: 13px 22px; border-radius: 999px; }
+.actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.go { grid-column: 1 / -1; justify-content: center; display: inline-flex; align-items: center; gap: 10px; background: var(--glow); color: var(--btn-ink); text-decoration: none; font-weight: 700; padding: 13px 22px; border-radius: 999px; }
 .go:hover { filter: brightness(1.06); }
 .go[aria-disabled="true"] { opacity: .45; pointer-events: none; }
-.reroll { background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 12px 18px; font: inherit; cursor: pointer; }
+.reroll { background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 11px 8px; font: inherit; font-size: 15px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .reroll:hover { border-color: var(--ink); background: var(--glow-soft); }
 a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-offset: 3px; }
 
 [hidden] { display: none !important; }
 
-/* Filter: deliberately quiet */
-.filter { display: grid; gap: 12px; justify-items: start; margin-top: -12px; }
-.filter-toggle { background: none; border: 0; padding: 4px 2px; font: inherit; font-size: 13px; color: var(--muted); opacity: .75; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
-.filter-toggle:hover { opacity: 1; }
+/* Filter groups */
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px; padding: 4px 10px; font: inherit; font-size: 13px; cursor: pointer; }
 .chip[aria-pressed="true"] { color: var(--ink); border-color: var(--muted); background: var(--panel); }
@@ -112,13 +124,11 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-
     <div class="actions">
       <a class="go" id="go" href="https://www.bbc.co.uk/sounds" target="_blank" rel="noopener">▶ Listen on BBC Sounds</a>
       <button class="reroll" id="reroll" type="button">Try another</button>
+      <button class="reroll" id="share" type="button">Share</button>
+      <button class="reroll" id="filterToggle" type="button" aria-expanded="false" aria-controls="filterPanel">Filter</button>
     </div>
-  </section>
-
-  <div class="filter">
-    <button class="filter-toggle" id="filterToggle" type="button" aria-expanded="false" aria-controls="filterPanel">filter</button>
     <div class="chips" id="filterPanel" hidden></div>
-  </div>
+  </section>
 
 </div>
 
@@ -154,16 +164,16 @@ const $ = id => document.getElementById(id);
 const go = $("go");
 let last = null;
 function freqFor(pid) { let h = 0; for (const c of pid) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 88 + (h % 200) / 10; }
-function spin() {
+function spin(chosen) {
   const today = new Date().toISOString().slice(0, 10);
   const pool = EPS.filter(e => (!e[8] || e[8] > today) && on.has(LABELS[e[0]]));
-  if (!pool.length) {
+  if (!pool.length && !chosen) {
     go.setAttribute("aria-disabled", "true");
     for (const id of ["genre", "dur", "net", "year", "show", "syn"]) $(id).textContent = "";
-    $("title").textContent = "Turn on at least one group under filter"; return;
+    $("title").textContent = "Turn on at least one group under Filter"; return;
   }
   go.removeAttribute("aria-disabled");
-  let e; do { e = pool[Math.floor(Math.random() * pool.length)]; } while (pool.length > 1 && last && e[1] === last[1]);
+  let e = chosen; if (!e) do { e = pool[Math.floor(Math.random() * pool.length)]; } while (pool.length > 1 && last && e[1] === last[1]);
   last = e;
   const [g, pid, show, ep, syn, minsRaw, net, year] = e;
   const mins = +minsRaw;
@@ -180,12 +190,47 @@ function spin() {
   const f = freqFor(pid);
   $("freq").textContent = f.toFixed(1);
   $("needle").style.left = ((10 + (f - 88) / 20 * 380) / 400 * 100) + "%";
+  try { history.replaceState(null, "", "#" + pid); } catch (err) {}
 }
+
+// A shared programme that has since left the list: show a simple card that still links to it
+function showShared(pid) {
+  last = null;
+  go.removeAttribute("aria-disabled");
+  go.href = "https://www.bbc.co.uk/sounds/play/" + pid;
+  for (const id of ["genre", "dur", "net", "year", "show"]) $(id).textContent = "";
+  $("genre").textContent = "Shared with you";
+  $("title").textContent = "A programme someone picked for you";
+  $("syn").textContent = "Press Listen to hear it on BBC Sounds, or try another.";
+  const f = freqFor(pid);
+  $("freq").textContent = f.toFixed(1);
+  $("needle").style.left = ((10 + (f - 88) / 20 * 380) / 400 * 100) + "%";
+}
+
+function count(name) { try { window.goatcounter && window.goatcounter.count({ path: name, title: name, event: true }); } catch (err) {} }
 go.addEventListener("click", ev => {
   if (go.getAttribute("aria-disabled")) { ev.preventDefault(); return; }
-  setTimeout(spin, 60);
+  count("listen");
+  setTimeout(() => spin(), 60);
 });
-$("reroll").addEventListener("click", spin);
+$("reroll").addEventListener("click", () => spin());
+
+// Share: phone share sheet where available, otherwise copy the link
+const shareBtn = $("share");
+shareBtn.addEventListener("click", async () => {
+  const pid = (location.hash || "").slice(1);
+  const url = "https://kettle-radio.github.io/" + (pid ? "#" + pid : "");
+  const title = $("title").textContent;
+  const text = title ? `${title}: found on Put the Kettle On` : "Put the Kettle On";
+  count("share");
+  if (navigator.share) {
+    try { await navigator.share({ title: "Put the Kettle On", text, url }); } catch (err) {}
+    return;
+  }
+  try { await navigator.clipboard.writeText(url); shareBtn.textContent = "Link copied"; }
+  catch (err) { shareBtn.textContent = "Copy failed"; }
+  setTimeout(() => { shareBtn.textContent = "Share"; }, 1800);
+});
 
 // Filter (remembered on this device only)
 const groupNames = Object.keys(GROUPS);
@@ -197,7 +242,7 @@ try {
 const panel = $("filterPanel"), toggle = $("filterToggle");
 function syncFilter() {
   for (const b of panel.children) b.setAttribute("aria-pressed", on.has(b.dataset.g) ? "true" : "false");
-  toggle.textContent = on.size === groupNames.length ? "filter" : `filter · ${on.size} of ${groupNames.length}`;
+  toggle.textContent = on.size === groupNames.length ? "Filter" : `Filter · ${on.size}`;
   try { localStorage.setItem("kettle-groups", JSON.stringify([...on])); } catch (e) {}
 }
 groupNames.forEach((name, i) => {
@@ -211,7 +256,15 @@ toggle.addEventListener("click", () => {
   toggle.setAttribute("aria-expanded", String(!panel.hidden));
 });
 syncFilter();
-spin();
+
+// Open on a shared programme if the link has one, e.g. kettle-radio.github.io/#b0b0v37m
+const wanted = (location.hash || "").slice(1);
+if (/^[a-z0-9]{8}$/.test(wanted)) {
+  const hit = EPS.find(e => e[1] === wanted);
+  if (hit) spin(hit); else showShared(wanted);
+} else {
+  spin();
+}
 </script>
 
 </body>
