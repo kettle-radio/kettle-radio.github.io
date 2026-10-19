@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Randomly chosen, timeless BBC Sounds.">
+<title>Put the Kettle On</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,100&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+
+/* Layout: one calm column; an old wireless set with an FM tuning dial, the chosen programme as its "now playing" card, genres below */
+:root {
+  --bg: #e5ebe3;
+  --panel: #f6f8f3;
+  --ink: #22302a;
+  --muted: #5c6b63;
+  --line: #c4cfc6;
+  --glow: #b5651d;
+  --glow-soft: #f3dcc2;
+  --dial: #2b3a33;
+  --dial-ink: #f1e6d4;
+  --btn-ink: #ffffff;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #131a17; --panel: #1b2420; --ink: #e8ece6; --muted: #9eaca4; --line: #2f3c36;
+  --glow: #eaa25c; --glow-soft: #3a2a1b; --dial: #0d1210; --dial-ink: #f1e6d4; --btn-ink: #1d1209; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #131a17; --panel: #1b2420; --ink: #e8ece6; --muted: #9eaca4; --line: #2f3c36;
+  --glow: #eaa25c; --glow-soft: #3a2a1b; --dial: #0d1210; --dial-ink: #f1e6d4; --btn-ink: #1d1209; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px 56px; }
+.wrap { max-width: 36rem; margin: 0 auto; display: grid; gap: 28px; }
+h1 { font-family: var(--display); font-variation-settings: "SOFT" 100; font-weight: 600; font-size: clamp(2.1rem, 8vw, 3rem); line-height: 1.05; margin: 0; text-wrap: balance; }
+.lede { margin: 10px 0 0; color: var(--muted); max-width: 52ch; }
+
+.set { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 18px; }
+
+/* FM dial */
+.dial { background: var(--dial); color: var(--dial-ink); border-radius: 10px; padding: 12px 14px 10px; position: relative; overflow: hidden; }
+.dial .band { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 6px; }
+.dial .band > span:first-child { opacity: .75; }
+.dial .freq { font-family: var(--display); font-size: 1.05rem; letter-spacing: 0; text-transform: none; color: var(--glow); font-variant-numeric: tabular-nums; }
+.scale { position: relative; height: 40px; }
+.scale svg { display: block; width: 100%; height: 40px; }
+.scale svg line { stroke: var(--dial-ink); }
+.scale svg text { fill: var(--dial-ink); font: 11px var(--body); font-variant-numeric: tabular-nums; }
+.needle { position: absolute; top: -4px; bottom: -2px; width: 2px; margin-left: -1px; background: var(--glow); box-shadow: 0 0 10px var(--glow); left: 30%; transition: left .9s cubic-bezier(.25,1.2,.4,1); }
+@media (prefers-reduced-motion: reduce) { .needle { transition: none; } }
+
+/* Programme card */
+.prog { display: grid; gap: 6px; min-height: 9.5em; align-content: start; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.meta .genre { color: var(--glow); font-weight: 700; }
+.show { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-top: 4px; }
+.title { font-family: var(--display); font-variation-settings: "SOFT" 100; font-weight: 600; font-size: clamp(1.35rem, 5vw, 1.7rem); line-height: 1.2; margin: 0; text-wrap: balance; }
+.syn { margin: 2px 0 0; max-width: 58ch; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.go { display: inline-flex; align-items: center; gap: 10px; background: var(--glow); color: var(--btn-ink); text-decoration: none; font-weight: 700; padding: 13px 22px; border-radius: 999px; }
+.go:hover { filter: brightness(1.06); }
+.go[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+.reroll { background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 12px 18px; font: inherit; cursor: pointer; }
+.reroll:hover { border-color: var(--ink); background: var(--glow-soft); }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-offset: 3px; }
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Put the Kettle On</h1>
+    <p class="lede">Randomly chosen, timeless BBC Sounds.</p>
+  </header>
+
+  <section class="set" aria-label="Your programme">
+    <div class="dial">
+      <div class="band"><span>FM · MHz</span><span class="freq" id="freq">93.4</span></div>
+      <div class="scale" aria-hidden="true">
+        <svg id="scaleSvg" viewBox="0 0 400 40" preserveAspectRatio="none"></svg>
+        <div class="needle" id="needle"></div>
+      </div>
+    </div>
+
+    <div class="prog" aria-live="polite">
+      <div class="meta"><span class="genre" id="genre"></span><span id="dur"></span><span id="net"></span><span id="year"></span></div>
+      <div class="show" id="show"></div>
+      <h2 class="title" id="title">Tuning in…</h2>
+      <p class="syn" id="syn"></p>
+    </div>
+
+    <div class="actions">
+      <a class="go" id="go" href="https://www.bbc.co.uk/sounds" target="_blank" rel="noopener">▶ Listen on BBC Sounds</a>
+      <button class="reroll" id="reroll" type="button">Try another</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const LABELS = {
+  "drama":"Drama","comedy":"Comedy","audiobooks":"Audiobooks","documentaries":"Documentaries",
+  "factual-history":"History","factual-scienceandnature":"Science & Nature","factual-artscultureandthemedia":"Arts & Culture",
+  "factual-lifestories":"Life Stories","factual-crimeandjustice-truecrime":"True Crime",
+  "factual-foodanddrink":"Food & Drink","factual-travel":"Travel & Places","factual-homesandgardens":"Homes & Gardens",
+  "factual-healthandwellbeing":"Health & Wellbeing","factual-familiesandrelationships":"Families & Relationships",
+  "religionandethics":"Religion & Ethics","factual-disability":"Disability"
+};
+// [genre, episode pid, show, episode title, synopsis, minutes, station, year]
+const EPS = /*EPISODES*/[];
+
+// FM scale 88–108 MHz
+(function drawScale() {
+  const svg = document.getElementById("scaleSvg"); let s = "";
+  for (let f = 880; f <= 1080; f += 5) {
+    const x = 10 + (f - 880) / 200 * 380, major = f % 40 === 0, mid = f % 10 === 0;
+    s += `<line x1="${x}" x2="${x}" y1="${major ? 18 : mid ? 24 : 29}" y2="38" stroke-width="${major ? 1.4 : 0.8}" opacity="${major ? 0.9 : 0.5}"/>`;
+    if (major) s += `<text x="${x}" y="12" text-anchor="middle">${f / 10}</text>`;
+  }
+  svg.innerHTML = s;
+})();
+
+const $ = id => document.getElementById(id);
+const go = $("go");
+let last = null;
+function freqFor(pid) { let h = 0; for (const c of pid) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 88 + (h % 200) / 10; }
+function spin() {
+  const today = new Date().toISOString().slice(0, 10);
+  const pool = EPS.filter(e => !e[8] || e[8] > today);
+  if (!pool.length) {
+    go.setAttribute("aria-disabled", "true");
+    for (const id of ["genre", "dur", "net", "year", "show", "syn"]) $(id).textContent = "";
+    $("title").textContent = "Pick at least one genre below"; return;
+  }
+  go.removeAttribute("aria-disabled");
+  let e; do { e = pool[Math.floor(Math.random() * pool.length)]; } while (pool.length > 1 && last && e[1] === last[1]);
+  last = e;
+  const [g, pid, show, ep, syn, minsRaw, net, year] = e;
+  const mins = +minsRaw;
+  go.href = "https://www.bbc.co.uk/sounds/play/" + pid;
+  $("genre").textContent = LABELS[g];
+  $("dur").textContent = mins >= 60 ? `${Math.floor(mins / 60)} hr ${mins % 60 ? (mins % 60) + " min" : ""}`.trim() : mins + " min";
+  $("net").textContent = net ? "BBC " + net.replace(/^BBC /, "") : "";
+  $("year").textContent = year || "";
+  $("show").textContent = show;
+  const weak = !ep || ep === show || /^(series \d+|episode \d+|\d{1,2}[\/.]\d{1,2}[\/.]\d{2,4}|\d{1,2} \w+ \d{4})$/i.test(ep);
+  $("title").textContent = weak ? show : ep;
+  $("show").textContent = weak ? "" : show;
+  $("syn").textContent = syn;
+  const f = freqFor(pid);
+  $("freq").textContent = f.toFixed(1);
+  $("needle").style.left = ((10 + (f - 88) / 20 * 380) / 400 * 100) + "%";
+}
+go.addEventListener("click", ev => {
+  if (go.getAttribute("aria-disabled")) { ev.preventDefault(); return; }
+  setTimeout(spin, 60);
+});
+$("reroll").addEventListener("click", spin);
+spin();
+</script>
+
+</body>
+</html>
