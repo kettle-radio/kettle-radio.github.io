@@ -72,6 +72,15 @@ h1 { font-family: var(--display); font-variation-settings: "SOFT" 100; font-weig
 .reroll:hover { border-color: var(--ink); background: var(--glow-soft); }
 a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-offset: 3px; }
 
+/* Filter: deliberately quiet */
+.filter { display: grid; gap: 12px; justify-items: start; margin-top: -12px; }
+.filter-toggle { background: none; border: 0; padding: 4px 2px; font: inherit; font-size: 13px; color: var(--muted); opacity: .75; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.filter-toggle:hover { opacity: 1; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px; padding: 4px 10px; font: inherit; font-size: 13px; cursor: pointer; }
+.chip[aria-pressed="true"] { color: var(--ink); border-color: var(--muted); background: var(--panel); }
+.chip[aria-pressed="false"] { text-decoration: line-through; opacity: .6; }
+
 </style>
 </head>
 <body>
@@ -104,17 +113,27 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-
     </div>
   </section>
 
+  <div class="filter">
+    <button class="filter-toggle" id="filterToggle" type="button" aria-expanded="false" aria-controls="filterPanel">filter</button>
+    <div class="chips" id="filterPanel" hidden></div>
+  </div>
+
 </div>
 
 <script>
-const LABELS = {
-  "drama":"Drama","comedy":"Comedy","audiobooks":"Audiobooks","documentaries":"Documentaries",
-  "factual-history":"History","factual-scienceandnature":"Science & Nature","factual-artscultureandthemedia":"Arts & Culture",
-  "factual-lifestories":"Life Stories","factual-crimeandjustice-truecrime":"True Crime",
-  "factual-foodanddrink":"Food & Drink","factual-travel":"Travel & Places","factual-homesandgardens":"Homes & Gardens",
-  "factual-healthandwellbeing":"Health & Wellbeing","factual-familiesandrelationships":"Families & Relationships",
-  "religionandethics":"Religion & Ethics","factual-disability":"Disability"
+// Eight broad groups, built from the BBC's sixteen genres
+const GROUPS = {
+  "Stories & Drama": ["drama", "audiobooks"],
+  "Comedy": ["comedy"],
+  "History": ["factual-history"],
+  "Science & Nature": ["factual-scienceandnature"],
+  "Arts & Ideas": ["factual-artscultureandthemedia", "religionandethics"],
+  "Life Stories": ["factual-lifestories", "factual-familiesandrelationships", "factual-disability"],
+  "Documentaries & Crime": ["documentaries", "factual-crimeandjustice-truecrime"],
+  "Food, Travel & Living": ["factual-foodanddrink", "factual-travel", "factual-homesandgardens", "factual-healthandwellbeing"],
 };
+const LABELS = {};
+for (const [name, ids] of Object.entries(GROUPS)) for (const id of ids) LABELS[id] = name;
 // [genre, episode pid, show, episode title, synopsis, minutes, station, year]
 const EPS = /*EPISODES*/[];
 
@@ -135,11 +154,11 @@ let last = null;
 function freqFor(pid) { let h = 0; for (const c of pid) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 88 + (h % 200) / 10; }
 function spin() {
   const today = new Date().toISOString().slice(0, 10);
-  const pool = EPS.filter(e => !e[8] || e[8] > today);
+  const pool = EPS.filter(e => (!e[8] || e[8] > today) && on.has(LABELS[e[0]]));
   if (!pool.length) {
     go.setAttribute("aria-disabled", "true");
     for (const id of ["genre", "dur", "net", "year", "show", "syn"]) $(id).textContent = "";
-    $("title").textContent = "Pick at least one genre below"; return;
+    $("title").textContent = "Turn on at least one group under filter"; return;
   }
   go.removeAttribute("aria-disabled");
   let e; do { e = pool[Math.floor(Math.random() * pool.length)]; } while (pool.length > 1 && last && e[1] === last[1]);
@@ -165,6 +184,31 @@ go.addEventListener("click", ev => {
   setTimeout(spin, 60);
 });
 $("reroll").addEventListener("click", spin);
+
+// Filter (remembered on this device only)
+const groupNames = Object.keys(GROUPS);
+let on = new Set(groupNames);
+try {
+  const saved = JSON.parse(localStorage.getItem("kettle-groups") || "null");
+  if (Array.isArray(saved)) { const ok = saved.filter(n => groupNames.includes(n)); if (ok.length) on = new Set(ok); }
+} catch (e) {}
+const panel = $("filterPanel"), toggle = $("filterToggle");
+function syncFilter() {
+  for (const b of panel.children) b.setAttribute("aria-pressed", on.has(b.dataset.g) ? "true" : "false");
+  toggle.textContent = on.size === groupNames.length ? "filter" : `filter · ${on.size} of ${groupNames.length}`;
+  try { localStorage.setItem("kettle-groups", JSON.stringify([...on])); } catch (e) {}
+}
+groupNames.forEach((name, i) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.id = "group-" + i; b.dataset.g = name; b.textContent = name;
+  b.addEventListener("click", () => { on.has(name) ? on.delete(name) : on.add(name); syncFilter(); spin(); });
+  panel.appendChild(b);
+});
+toggle.addEventListener("click", () => {
+  panel.hidden = !panel.hidden;
+  toggle.setAttribute("aria-expanded", String(!panel.hidden));
+});
+syncFilter();
 spin();
 </script>
 
