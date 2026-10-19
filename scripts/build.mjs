@@ -36,7 +36,8 @@ const MUSIC_DOCS = [
   "Lives in Music", "Tracks of My Years", "Inheritance Tracks", "The Listening Service", "Tunes for Tyrants",
   "Pop Goes the Musical", "Words and Music", "Record Review Podcast", "Toast of London Radio", "Radio 2 Arts Show",
 ];
-const SPOKEN_NETWORKS = /^(radio 4|radio 4 extra|world service|sounds|radio 3)$/i;
+const SPOKEN_NETWORKS = /^(radio 4|radio 4 extra|world service|sounds)$/i;
+const PLAYLIST_SHOWS = /experience classical|classical favourites|saturday classics|classical fix|bollywood|certified|anthems|night tracks|calm|throwbacks|in session|planet|world routes|early music show|record review/i;
 const MUSIC_DOC_WORDS = /\b(story|stories|history|documentary|meets|uncovered|rise and fall|didn't know|lives|album|albums|eras|legend|life of|interview|in conversation)\b/i;
 
 // Genre sampling: up to 330 per genre, max 12 per show (3 for topical magazine shows).
@@ -166,7 +167,7 @@ async function fetchFresh() {
     for (const p of pages) for (const it of p.data || []) {
       const show = clean(it.titles?.primary);
       const net = clean(it.network?.short_title);
-      if (!show || NEWSY.test(show) || DAYTIME_DJ.test(show) || musicDocNames.has(norm(show))) continue;
+      if (!show || NEWSY.test(show) || DAYTIME_DJ.test(show) || PLAYLIST_SHOWS.test(show) || musicDocNames.has(norm(show)) || everNames.has(norm(show))) continue;
       // keep talk and documentary programmes; skip shows that are mostly records
       if (!SPOKEN_NETWORKS.test(net) && !MUSIC_DOC_WORDS.test(show + " " + (it.titles?.secondary || ""))) continue;
       const row = toRow("music", it);
