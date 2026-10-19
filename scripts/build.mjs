@@ -38,6 +38,8 @@ const GENRES = [
 const TOPICAL = /^(woman's hour|saturday live|the fifth floor|people fixing the world|elis james and john robins|that peter crouch podcast|the gerry anderson show|the scott mills weekly|the gemma collins podcast|loose ends|midweek|start the week|feedback|click|digital planet|science in action|inside health|health matters|5 live science podcast|what in the world|the conversation|newsjack|the now show|dead ringers|the kitchen caf[eé]|farmwatch|scotland outdoors|tech life)/i;
 const NEWSY = /^(today|pm|the world at one|the world tonight|newsnight|newscast|americast|any questions|any answers|week in westminster|westminster hour|from our own correspondent|the briefing room|world business report|newshour|newsday|the newsroom|5 live news|radio 1 newsbeat|the daily service|sunday|thought for the day|prayer for the day|beyond belief|the media show|front row|you and yours|money box|file on 4|analysis|the context|global news podcast|ukrainecast|the news quiz|the archers|bells on sunday|daily service|in touch|crossing continents|assignment|the inquiry|question time)\b|news|politic|briefing|headline|highlights|gossip|need to know|all day breakfast|smart consumer|election|the week in|football|soccer|cricket|rugby|golf|tennis|formula 1|\bf1\b|sport/i;
 
+// Daytime presenter shows: mostly chat and travel news between records, so they date quickly
+const DAYTIME_DJ = /breakfast|drivetime|\bdrive\b|lunchtime|afternoon show|\bchart\b|phone-?in|requests|travel/i;
 // Current-affairs giveaways in an episode title or synopsis
 const TOPICAL_TEXT = /\b(minister|government|parliament|mps?|prime minister|chancellor|the budget|election|ukraine|gaza|brexit|trump|white house|downing street|this week's news)\b/i;
 const clean = (s) => (s || "").replace(/\s+/g, " ").trim();
@@ -60,9 +62,9 @@ async function fetchFresh() {
   const cutoff = Date.now() + 90 * 864e5; // must stay available for 3+ months
   const seen = new Set();
   const rows = [];
-  const toRow = (genre, it) => {
+  const toRow = (genre, it, minUntil = cutoff) => {
     const until = it.availability?.to ? Date.parse(it.availability.to) : Infinity;
-    if (until < cutoff) return null;
+    if (until < minUntil) return null;
     const pid = (it.urn || "").split(":").pop();
     if (!pid || seen.has(pid)) return null;
     const mins = Math.round((it.duration?.value || 0) / 60);
@@ -119,6 +121,39 @@ async function fetchFresh() {
     }
     console.log(`  ${genre}: ${kept} (catalogue ${total})`);
   }
+
+  // Music: only shown when someone picks "Music" in the filter.
+  // Music shows often stay on BBC Sounds for just a few weeks, so they only need 2 weeks left;
+  // the page hides anything that has expired since the last weekly refresh.
+  const musicCutoff = Date.now() + 14 * 864e5;
+  const musicCats = ((await getJSON("/v2/categories/container?kind=music")).data || []).map((c) => c.id).filter(Boolean);
+  let musicTotal = 0;
+  for (const cat of musicCats) {
+    const first = await getJSON(`/v2/programmes/playable?category=${cat}&sort=-release_date&limit=1`);
+    const total = first.total || 0;
+    const n = Math.min(4, Math.max(1, Math.ceil(total / 100)));
+    const offsets = new Set();
+    let guard = 0;
+    while (offsets.size < n && guard++ < 50) offsets.add(total <= 400 ? offsets.size * 100 : Math.floor(Math.random() * Math.max(1, total - 100)));
+    const pages = await Promise.all([...offsets].map((o) => getJSON(`/v2/programmes/playable?category=${cat}&sort=-release_date&offset=${o}&limit=100`)));
+    const cand = [];
+    for (const p of pages) for (const it of p.data || []) {
+      const show = clean(it.titles?.primary);
+      if (!show || NEWSY.test(show) || DAYTIME_DJ.test(show)) continue;
+      const row = toRow("music-" + cat, it, musicCutoff);
+      if (row) cand.push(row);
+    }
+    let kept = 0;
+    for (const r of shuffle(cand)) {
+      if (kept >= 60) break;
+      if (seen.has(r[1])) continue;
+      perShow[r[2]] = (perShow[r[2]] || 0) + 1;
+      if (perShow[r[2]] > 8) continue;
+      seen.add(r[1]); rows.push(r); kept++;
+    }
+    musicTotal += kept;
+  }
+  console.log(`  music: ${musicTotal} from ${musicCats.length} categories`);
   return rows;
 }
 
