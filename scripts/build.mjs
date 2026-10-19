@@ -12,7 +12,7 @@ const EVERGREEN = {
   "You're Dead to Me": "factual-history", "Witness History": "factual-history",
   "The Infinite Monkey Cage": "factual-scienceandnature", "Short Works": "audiobooks",
   "The Essay": "factual-artscultureandthemedia", "Archive on 4": "documentaries",
-  "Soul Music": "documentaries", "Natural Histories": "factual-scienceandnature",
+  "Natural Histories": "factual-scienceandnature",
   "Lady Killers with Lucy Worsley": "factual-crimeandjustice-truecrime",
   "Just One Thing - with Michael Mosley": "factual-healthandwellbeing", "Ramblings": "factual-travel",
   "Seriously...": "documentaries", "The Food Programme": "factual-foodanddrink",
@@ -28,6 +28,17 @@ const EVERGREEN = {
   "John Finnemore's Souvenir Programme": "comedy", "Round Britain Quiz": "comedy",
 };
 
+// Music documentaries and music talk: stories about songs, artists and composers, not playlists.
+const MUSIC_DOCS = [
+  "Soul Music", "Composer of the Week", "Private Passions", "Discovering Music", "Music Uncovered",
+  "The Rise and Fall of ...", "Things You Didn't Know About Pop", "Romesh Ranganathan: For the Love of Hip-Hop",
+  "Forging Metal", "Eras", "Classic Scottish Albums", "Ricky Ross Meets", "Mastertapes", "Sound of Cinema",
+  "Lives in Music", "Tracks of My Years", "Inheritance Tracks", "The Listening Service", "Tunes for Tyrants",
+  "Pop Goes the Musical", "Words and Music", "Record Review Podcast", "Toast of London Radio", "Radio 2 Arts Show",
+];
+const SPOKEN_NETWORKS = /^(radio 4|radio 4 extra|world service|sounds|radio 3)$/i;
+const MUSIC_DOC_WORDS = /\b(story|stories|history|documentary|meets|uncovered|rise and fall|didn't know|lives|album|albums|eras|legend|life of|interview|in conversation)\b/i;
+
 // Genre sampling: up to 330 per genre, max 12 per show (3 for topical magazine shows).
 const GENRES = [
   "drama", "comedy", "audiobooks", "documentaries", "factual-history", "factual-scienceandnature",
@@ -38,7 +49,7 @@ const GENRES = [
 const TOPICAL = /^(woman's hour|saturday live|the fifth floor|people fixing the world|elis james and john robins|that peter crouch podcast|the gerry anderson show|the scott mills weekly|the gemma collins podcast|loose ends|midweek|start the week|feedback|click|digital planet|science in action|inside health|health matters|5 live science podcast|what in the world|the conversation|newsjack|the now show|dead ringers|the kitchen caf[eé]|farmwatch|scotland outdoors|tech life)/i;
 const NEWSY = /^(today|pm|the world at one|the world tonight|newsnight|newscast|americast|any questions|any answers|week in westminster|westminster hour|from our own correspondent|the briefing room|world business report|newshour|newsday|the newsroom|5 live news|radio 1 newsbeat|the daily service|sunday|thought for the day|prayer for the day|beyond belief|the media show|front row|you and yours|money box|file on 4|analysis|the context|global news podcast|ukrainecast|the news quiz|the archers|bells on sunday|daily service|in touch|crossing continents|assignment|the inquiry|question time)\b|news|politic|briefing|headline|highlights|gossip|need to know|all day breakfast|smart consumer|election|the week in|football|soccer|cricket|rugby|golf|tennis|formula 1|\bf1\b|sport/i;
 
-// Daytime presenter shows: mostly chat and travel news between records, so they date quickly
+// Daytime presenter shows: mostly records, chat and travel news, so they date quickly
 const DAYTIME_DJ = /breakfast|drivetime|\bdrive\b|lunchtime|afternoon show|\bchart\b|phone-?in|requests|travel/i;
 // Current-affairs giveaways in an episode title or synopsis
 const TOPICAL_TEXT = /\b(minister|government|parliament|mps?|prime minister|chancellor|the budget|election|ukraine|gaza|brexit|trump|white house|downing street|this week's news)\b/i;
@@ -93,6 +104,7 @@ async function fetchFresh() {
   }
 
   const perShow = {};
+  const musicDocNames = new Set(MUSIC_DOCS.map(norm));
   for (const genre of GENRES) {
     const first = await getJSON(`/v2/programmes/playable?category=${genre}&sort=-release_date&limit=1`);
     const total = first.total || 0;
@@ -105,7 +117,7 @@ async function fetchFresh() {
     for (const p of pages) for (const it of p.data || []) {
       const show = clean(it.titles?.primary);
       const net = clean(it.network?.short_title);
-      if (!show || NEWSY.test(show) || everNames.has(norm(show)) || net === "CBeebies" || net === "Sport") continue;
+      if (!show || NEWSY.test(show) || everNames.has(norm(show)) || musicDocNames.has(norm(show)) || net === "CBeebies" || net === "Sport") continue;
       if (TOPICAL_TEXT.test((it.titles?.secondary || "") + " " + (it.synopses?.short || ""))) continue;
       const row = toRow(genre, it);
       if (row) cand.push(row);
@@ -122,12 +134,26 @@ async function fetchFresh() {
     console.log(`  ${genre}: ${kept} (catalogue ${total})`);
   }
 
-  // Music: only shown when someone picks "Music" in the filter.
-  // Music shows often stay on BBC Sounds for just a few weeks, so they only need 2 weeks left;
-  // the page hides anything that has expired since the last weekly refresh.
-  const musicCutoff = Date.now() + 14 * 864e5;
-  const musicCats = ((await getJSON("/v2/categories/container?kind=music")).data || []).map((c) => c.id).filter(Boolean);
+  // Music documentaries: first the curated shows' archives, then spoken programmes from the BBC's music categories.
   let musicTotal = 0;
+  for (const name of MUSIC_DOCS) {
+    const search = await getJSON("/v2/programmes/search/container?q=" + encodeURIComponent(name));
+    const hit = (search.data || []).find((d) => norm(d.titles?.primary) === norm(name));
+    if (!hit) { console.log(`  ${name}: not found`); continue; }
+    const id = hit.id || (hit.urn || "").split(":").pop();
+    const first = await getJSON(`/v2/programmes/playable?container=${id}&sort=-release_date&limit=100&offset=0`);
+    const total = first.total || 0;
+    const pageCount = Math.floor(total / 100);
+    const offsets = new Set();
+    while (offsets.size < Math.min(2, pageCount)) offsets.add(100 * (1 + Math.floor(Math.random() * pageCount)));
+    const pages = [first, ...(await Promise.all([...offsets].map((o) => getJSON(`/v2/programmes/playable?container=${id}&sort=-release_date&limit=100&offset=${o}`))))];
+    const cand = pages.flatMap((p) => (p.data || []).map((it) => toRow("music", it)).filter(Boolean));
+    let kept = 0;
+    for (const r of shuffle(cand)) { if (kept >= 40) break; if (seen.has(r[1])) continue; seen.add(r[1]); rows.push(r); kept++; }
+    musicTotal += kept;
+    console.log(`  ${name}: ${kept} of ${total}`);
+  }
+  const musicCats = ((await getJSON("/v2/categories/container?kind=music")).data || []).map((c) => c.id).filter(Boolean);
   for (const cat of musicCats) {
     const first = await getJSON(`/v2/programmes/playable?category=${cat}&sort=-release_date&limit=1`);
     const total = first.total || 0;
@@ -139,13 +165,16 @@ async function fetchFresh() {
     const cand = [];
     for (const p of pages) for (const it of p.data || []) {
       const show = clean(it.titles?.primary);
-      if (!show || NEWSY.test(show) || DAYTIME_DJ.test(show)) continue;
-      const row = toRow("music-" + cat, it, musicCutoff);
+      const net = clean(it.network?.short_title);
+      if (!show || NEWSY.test(show) || DAYTIME_DJ.test(show) || musicDocNames.has(norm(show))) continue;
+      // keep talk and documentary programmes; skip shows that are mostly records
+      if (!SPOKEN_NETWORKS.test(net) && !MUSIC_DOC_WORDS.test(show + " " + (it.titles?.secondary || ""))) continue;
+      const row = toRow("music", it);
       if (row) cand.push(row);
     }
     let kept = 0;
     for (const r of shuffle(cand)) {
-      if (kept >= 60) break;
+      if (kept >= 40) break;
       if (seen.has(r[1])) continue;
       perShow[r[2]] = (perShow[r[2]] || 0) + 1;
       if (perShow[r[2]] > 8) continue;
@@ -153,7 +182,7 @@ async function fetchFresh() {
     }
     musicTotal += kept;
   }
-  console.log(`  music: ${musicTotal} from ${musicCats.length} categories`);
+  console.log(`  music documentaries: ${musicTotal}`);
   return rows;
 }
 

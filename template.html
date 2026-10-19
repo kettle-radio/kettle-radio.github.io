@@ -102,7 +102,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-
 .chip { border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 5px 11px; font: inherit; font-size: 13px; cursor: pointer; }
 .chip:hover { border-color: var(--muted); }
 .chip[aria-pressed="true"] { color: var(--panel); border-color: var(--ink); background: var(--ink); }
-.chips .divider { width: 1px; align-self: stretch; background: var(--line); margin: 2px 4px; }
+
 
 </style>
 </head>
@@ -156,11 +156,11 @@ const GROUPS = {
   "Life Stories": ["factual-lifestories", "factual-familiesandrelationships", "factual-disability"],
   "Documentaries & Crime": ["documentaries", "factual-crimeandjustice-truecrime"],
   "Food, Travel & Living": ["factual-foodanddrink", "factual-travel", "factual-homesandgardens", "factual-healthandwellbeing"],
+  "Music Documentaries": ["music"],
 };
 const LABELS = {};
 for (const [name, ids] of Object.entries(GROUPS)) for (const id of ids) LABELS[id] = name;
-// Music is opt-in: it only plays when someone picks it in the filter
-const groupOf = g => g.startsWith("music-") ? "Music" : LABELS[g];
+const groupOf = g => LABELS[g] || (g.startsWith("music") ? "Music Documentaries" : g);
 // [genre, episode pid, show, episode title, synopsis, minutes, station, year]
 const EPS = /*EPISODES*/[];
 
@@ -181,7 +181,7 @@ let last = null;
 function freqFor(pid) { let h = 0; for (const c of pid) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 88 + (h % 200) / 10; }
 function spin(chosen) {
   const today = new Date().toISOString().slice(0, 10);
-  const pool = EPS.filter(e => (!e[8] || e[8] > today) && (picked.size ? picked.has(groupOf(e[0])) : groupOf(e[0]) !== "Music"));
+  const pool = EPS.filter(e => (!e[8] || e[8] > today) && (!picked.size || picked.has(groupOf(e[0]))));
   if (!pool.length && !chosen) {
     go.setAttribute("aria-disabled", "true");
     for (const id of ["genre", "dur", "net", "year", "show", "syn"]) $(id).textContent = "";
@@ -252,9 +252,8 @@ shareBtn.addEventListener("click", async () => {
 });
 
 // Filter: pick what you're in the mood for (remembered on this device only).
-// Nothing picked = everything except music.
-const hasMusic = EPS.some(e => e[0].startsWith("music-"));
-const groupNames = Object.keys(GROUPS).concat(hasMusic ? ["Music"] : []);
+// Nothing picked = everything.
+const groupNames = Object.keys(GROUPS).filter(n => EPS.some(e => groupOf(e[0]) === n));
 let picked = new Set();
 try {
   const saved = JSON.parse(localStorage.getItem("kettle-picks") || "null");
@@ -270,7 +269,6 @@ const hint = document.createElement("span");
 hint.className = "hint"; hint.textContent = "Pick what you're in the mood for, or leave blank for anything.";
 panel.appendChild(hint);
 groupNames.forEach((name, i) => {
-  if (name === "Music") { const d = document.createElement("span"); d.className = "divider"; d.setAttribute("aria-hidden", "true"); panel.appendChild(d); }
   const b = document.createElement("button");
   b.type = "button"; b.className = "chip"; b.id = "group-" + i; b.dataset.g = name; b.textContent = name;
   b.addEventListener("click", () => { picked.has(name) ? picked.delete(name) : picked.add(name); syncFilter(); spin(); });
