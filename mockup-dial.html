@@ -68,6 +68,13 @@ header { text-align: center; }
 .dial .band > span:first-child { opacity: .75; }
 .dial .freq { font-family: var(--display); font-size: 1.05rem; letter-spacing: 0; text-transform: none; color: var(--glow); font-variant-numeric: tabular-nums; }
 .scale { position: relative; height: 44px; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; }
+.scale .yhl { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--dial-ink) 9%, transparent); border-radius: 4px; transition: left .6s, width .6s; pointer-events: none; }
+.scale { cursor: default; }
+.dial.focusing .scale, .dial.tuned .scale { cursor: pointer; }
+.dial.focusing { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--glow) 55%, transparent); }
+.dial.focusing .scale .lbl { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .dial.focusing .scale .lbl { animation: none; } }
 .scale .hl { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--glow) 22%, transparent); border-radius: 4px; transition: left .3s, width .3s; pointer-events: none; }
 .dial .band .tuned { display: inline-flex; gap: 8px; align-items: baseline; }
 .anyyear { background: none; border: 1px solid color-mix(in srgb, var(--dial-ink) 40%, transparent); color: var(--dial-ink); border-radius: 999px; font: inherit; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 2px 8px; cursor: pointer; }
@@ -120,9 +127,10 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-
   </header>
 
   <section class="set" aria-label="Your programme">
-    <div class="dial">
-      <div class="band"><span class="tuned"><span id="tunedLabel">Tuned to · any year</span><button class="anyyear" id="anyYear" type="button" hidden>Any year</button></span><span class="freq" id="freq">1961</span></div>
+    <div class="dial" id="dial">
+      <div class="band"><span class="tuned"><span id="tunedLabel">Any year</span><button class="anyyear" id="focusBtn" type="button">Focus on a decade</button><button class="anyyear" id="anyYear" type="button" hidden>Any year</button></span><span class="freq" id="freq">1961</span></div>
       <div class="scale" id="scale" role="slider" aria-label="Tune to a decade" tabindex="0" aria-valuemin="1950" aria-valuemax="2020" aria-valuetext="Any year">
+        <div class="yhl" id="yhl"></div>
         <div class="hl" id="hl" hidden></div>
         <svg id="scaleSvg" viewBox="0 0 400 44" preserveAspectRatio="none"></svg>
         <div class="needle" id="needle"></div>
@@ -149,7 +157,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-
     <div class="chips" id="filterPanel" hidden></div>
   </section>
 
-  <p class="mock-note">Mock-up: drag or tap the dial to tune to a decade. Tap the same decade again for any year.</p>
+  <p class="mock-note">Mock-up: the needle always shows the programme's year. Press "Focus on a decade", then tap or drag the dial to pick one.</p>
 
 </div>
 
@@ -184,7 +192,7 @@ const X0 = 10, W = 380, BAND = W / DECADES.length;
     }
     const x = X0 + i * BAND;
     s += `<line x1="${x}" x2="${x}" y1="20" y2="42" stroke-width="1.4" opacity="0.9"/>`;
-    s += `<text x="${x + BAND / 2}" y="13" text-anchor="middle">${String(d).slice(2)}s</text>`;
+    s += `<text class="lbl" x="${x + BAND / 2}" y="13" text-anchor="middle">${String(d).slice(2)}s</text>`;
   });
   s += `<line x1="${X0 + W}" x2="${X0 + W}" y1="20" y2="42" stroke-width="1.4" opacity="0.9"/>`;
   svg.innerHTML = s;
@@ -244,6 +252,8 @@ function spin(chosen) {
   $("syn").textContent = syn;
   $("freq").textContent = era.year;
   $("needle").style.left = pct(yearX(era.year));
+  const di = Math.min(DECADES.length - 1, Math.max(0, Math.floor((Math.min(2029, Math.max(1950, era.year)) - 1950) / 10)));
+  $("yhl").style.left = pct(X0 + di * BAND); $("yhl").style.width = pct(BAND); $("yhl").hidden = tuned !== null;
   try { history.replaceState(null, "", "#" + pid); } catch (err) {}
 }
 
@@ -278,8 +288,13 @@ async function setTuned(d) {
   if (tuned !== d) return; // tuned elsewhere while loading
   const today = new Date().toISOString().slice(0, 10);
   const n = d === null ? 0 : poolFor(today).length;
-  $("tunedLabel").textContent = d === null ? "Tuned to · any year" : `Tuned to · ${d}s · ${n}`;
+  focusing = false;
+  $("tunedLabel").textContent = d === null ? "Any year" : `${d}s · ${n}`;
   $("anyYear").hidden = d === null;
+  $("focusBtn").hidden = d !== null;
+  $("focusBtn").textContent = "Focus on a decade";
+  $("dial").classList.toggle("focusing", false);
+  $("dial").classList.toggle("tuned", d !== null);
   scale.setAttribute("aria-valuetext", d === null ? "Any year" : d + "s");
   if (d === null) hl.hidden = true;
   else { hl.hidden = false; hl.style.left = pct(X0 + DECADES.indexOf(d) * BAND); hl.style.width = pct(BAND); }
@@ -291,7 +306,16 @@ function decadeAt(clientX) {
   return DECADES[Math.min(DECADES.length - 1, Math.max(0, Math.floor((x - X0) / BAND)))];
 }
 let dragging = false, startX = 0;
-scale.addEventListener("pointerdown", ev => { dragging = true; startX = ev.clientX; scale.setPointerCapture(ev.pointerId); $("needle").style.transition = "none"; moveNeedle(ev); });
+let focusing = false;
+$("focusBtn").addEventListener("click", () => {
+  focusing = !focusing;
+  $("dial").classList.toggle("focusing", focusing);
+  $("tunedLabel").textContent = focusing ? "Tap a decade" : "Any year";
+  $("focusBtn").textContent = focusing ? "Cancel" : "Focus on a decade";
+  if (focusing) scale.focus();
+});
+const canTune = () => focusing || tuned !== null;
+scale.addEventListener("pointerdown", ev => { if (!canTune()) return; dragging = true; startX = ev.clientX; scale.setPointerCapture(ev.pointerId); $("needle").style.transition = "none"; moveNeedle(ev); });
 scale.addEventListener("pointermove", ev => { if (dragging) moveNeedle(ev); });
 scale.addEventListener("pointerup", ev => {
   if (!dragging) return; dragging = false; $("needle").style.transition = "";
@@ -304,7 +328,7 @@ function moveNeedle(ev) {
   $("needle").style.left = pct(x);
 }
 scale.addEventListener("keydown", ev => {
-  if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+  if (!canTune() || (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight")) return;
   ev.preventDefault();
   const i = tuned === null ? (ev.key === "ArrowLeft" ? DECADES.length : -1) : DECADES.indexOf(tuned);
   const n = Math.min(DECADES.length - 1, Math.max(0, i + (ev.key === "ArrowRight" ? 1 : -1)));
