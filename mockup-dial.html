@@ -201,6 +201,17 @@ function eraYear(e) {
   return m ? { year: +m[1], original: true } : { year: +e[7] || 2020, original: false };
 }
 let tuned = null; // decade start, or null for any year
+// Deeper lists for earlier decades, loaded on demand
+const decadeLists = {};
+let extra = [];
+async function loadDecade(d) {
+  if (d === null || d >= 2000) return [];
+  if (!decadeLists[d]) {
+    try { const r = await fetch(`decades/${d}s.json`); decadeLists[d] = r.ok ? await r.json() : []; }
+    catch (err) { decadeLists[d] = []; }
+  }
+  return decadeLists[d];
+}
 const inTuned = e => { if (tuned === null) return true; const y = eraYear(e).year; return tuned === 1950 ? y < 1960 : (y >= tuned && y < tuned + 10); };
 
 const $ = id => document.getElementById(id);
@@ -209,7 +220,7 @@ let last = null;
 function freqFor(pid) { let h = 0; for (const c of pid) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 88 + (h % 200) / 10; }
 function spin(chosen) {
   const today = new Date().toISOString().slice(0, 10);
-  const pool = EPS.filter(e => (!e[8] || e[8] > today) && (!picked.size || picked.has(groupOf(e[0]))) && inTuned(e));
+  const pool = poolFor(today);
   if (!pool.length && !chosen) {
     go.setAttribute("aria-disabled", "true");
     for (const id of ["genre", "dur", "net", "year", "show", "syn"]) $(id).textContent = "";
@@ -251,9 +262,22 @@ function showShared(pid) {
 
 // Tuning: drag or tap the dial to choose a decade
 const scale = $("scale"), hl = $("hl");
-function setTuned(d) {
+function poolFor(today) {
+  const ids = new Set(), out = [];
+  for (const e of EPS.concat(extra)) {
+    if (ids.has(e[1])) continue;
+    if ((e[8] && e[8] <= today) || (picked.size && !picked.has(groupOf(e[0]))) || !inTuned(e)) continue;
+    ids.add(e[1]); out.push(e);
+  }
+  return out;
+}
+async function setTuned(d) {
   tuned = d;
-  const n = d === null ? 0 : EPS.filter(inTuned).length;
+  if (d !== null && d < 2000) { $("tunedLabel").textContent = `Tuning to the ${d}s…`; }
+  extra = await loadDecade(d);
+  if (tuned !== d) return; // tuned elsewhere while loading
+  const today = new Date().toISOString().slice(0, 10);
+  const n = d === null ? 0 : poolFor(today).length;
   $("tunedLabel").textContent = d === null ? "Tuned to · any year" : `Tuned to · ${d}s · ${n}`;
   $("anyYear").hidden = d === null;
   scale.setAttribute("aria-valuetext", d === null ? "Any year" : d + "s");

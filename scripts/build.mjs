@@ -70,6 +70,7 @@ async function getJSON(path) {
   return {};
 }
 
+const archive = {};
 async function fetchFresh() {
   const cutoff = Date.now() + 90 * 864e5; // must stay available for 3+ months
   const seen = new Set();
@@ -139,10 +140,11 @@ async function fetchFresh() {
   // Archive repeats (e.g. Radio 4 Extra comedy) are often up for only a few weeks, so they need 2 weeks left.
   const oldCutoff = Date.now() + 14 * 864e5;
   const oldPerShow = {};
+  const oldAll = {}; // every pre-2000 candidate, by decade, for the deeper decade lists
   let oldTotal = 0;
   for (const genre of GENRES) {
     const byDecade = {};
-    for (let page = 0; page < 15; page++) {
+    for (let page = 0; page < 30; page++) {
       const p = await getJSON(`/v2/programmes/playable?category=${genre}&sort=release_date&limit=100&offset=${page * 100}`);
       const items = p.data || [];
       if (!items.length) break;
@@ -156,8 +158,9 @@ async function fetchFresh() {
         if (TOPICAL_TEXT.test((it.titles?.secondary || "") + " " + (it.synopses?.short || ""))) continue;
         const row = toRow(genre, it, oldCutoff);
         if (!row) continue;
-        const decade = Math.floor(year / 10) * 10;
+        const decade = Math.max(1950, Math.floor(year / 10) * 10);
         (byDecade[decade] = byDecade[decade] || []).push(row);
+        (oldAll[decade] = oldAll[decade] || []).push(row);
       }
       if (reached2000) break;
     }
@@ -177,6 +180,19 @@ async function fetchFresh() {
     console.log(`  ${genre} (pre-2000): ${kept}`);
   }
   console.log(`  older programmes: ${oldTotal}`);
+
+  // Deeper decade lists, fetched only when someone tunes the dial to that decade
+  for (const [decade, cand] of Object.entries(oldAll)) {
+    const ids = new Set(), perShow = {}, list = [];
+    for (const r of shuffle(cand)) {
+      if (list.length >= 1000 || ids.has(r[1])) continue;
+      perShow[r[2]] = (perShow[r[2]] || 0) + 1;
+      if (perShow[r[2]] > 40) continue;
+      ids.add(r[1]); list.push(r);
+    }
+    archive[decade] = list;
+    console.log(`  ${decade}s decade list: ${list.length}`);
+  }
 
   // Music documentaries: first the curated shows' archives, then spoken programmes from the BBC's music categories.
   let musicTotal = 0;
@@ -245,7 +261,10 @@ if (episodes.length < MIN_EPISODES) {
 
 const template = await readFile("template.html", "utf8");
 const data = JSON.stringify(episodes).replace(/<\//g, "<\\/");
-await mkdir("dist", { recursive: true });
+await mkdir("dist/decades", { recursive: true });
+for (const [decade, list] of Object.entries(archive)) {
+  await writeFile(`dist/decades/${decade}s.json`, JSON.stringify(list));
+}
 await writeFile("dist/index.html", template.replace("/*EPISODES*/[]", data));
 // Design mock-ups get the same data
 try {
