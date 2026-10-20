@@ -204,5 +204,10 @@ const template = await readFile("template.html", "utf8");
 const data = JSON.stringify(episodes).replace(/<\//g, "<\\/");
 await mkdir("dist", { recursive: true });
 await writeFile("dist/index.html", template.replace("/*EPISODES*/[]", data));
+// Design mock-ups get the same data
+try {
+  const mock = await readFile("mockup-dial.html", "utf8");
+  await writeFile("dist/dial-mockup.html", mock.replace("/*EPISODES*/[]", data));
+} catch {}
 await cp("public", "dist", { recursive: true });
 console.log(`Wrote dist/index.html with ${episodes.length} episodes.`);
