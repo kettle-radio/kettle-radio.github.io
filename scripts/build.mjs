@@ -118,7 +118,7 @@ async function fetchFresh() {
     for (const p of pages) for (const it of p.data || []) {
       const show = clean(it.titles?.primary);
       const net = clean(it.network?.short_title);
-      if (!show || NEWSY.test(show) || everNames.has(norm(show)) || musicDocNames.has(norm(show)) || net === "CBeebies" || net === "Sport") continue;
+      if (!show || NEWSY.test(show) || everNames.has(norm(show)) || musicDocNames.has(norm(show)) || /^(cbeebies|cbbc|sport|news)$/i.test(net)) continue;
       if (TOPICAL_TEXT.test((it.titles?.secondary || "") + " " + (it.synopses?.short || ""))) continue;
       const row = toRow(genre, it);
       if (row) cand.push(row);
@@ -134,6 +134,49 @@ async function fetchFresh() {
     }
     console.log(`  ${genre}: ${kept} (catalogue ${total})`);
   }
+
+  // Older programmes: walk each genre oldest-first and take a spread from every decade before 2000.
+  // Archive repeats (e.g. Radio 4 Extra comedy) are often up for only a few weeks, so they need 2 weeks left.
+  const oldCutoff = Date.now() + 14 * 864e5;
+  const oldPerShow = {};
+  let oldTotal = 0;
+  for (const genre of GENRES) {
+    const byDecade = {};
+    for (let page = 0; page < 15; page++) {
+      const p = await getJSON(`/v2/programmes/playable?category=${genre}&sort=release_date&limit=100&offset=${page * 100}`);
+      const items = p.data || [];
+      if (!items.length) break;
+      let reached2000 = false;
+      for (const it of items) {
+        const year = +(it.release?.date || "").slice(0, 4);
+        if (!year || year >= 2000) { reached2000 = year >= 2000; continue; }
+        const show = clean(it.titles?.primary);
+        const net = clean(it.network?.short_title);
+        if (!show || NEWSY.test(show) || /^(cbeebies|cbbc|sport|news)$/i.test(net)) continue;
+        if (TOPICAL_TEXT.test((it.titles?.secondary || "") + " " + (it.synopses?.short || ""))) continue;
+        const row = toRow(genre, it, oldCutoff);
+        if (!row) continue;
+        const decade = Math.floor(year / 10) * 10;
+        (byDecade[decade] = byDecade[decade] || []).push(row);
+      }
+      if (reached2000) break;
+    }
+    let kept = 0;
+    for (const rowsInDecade of Object.values(byDecade)) {
+      let k = 0;
+      for (const r of shuffle(rowsInDecade)) {
+        if (k >= 60) break;
+        if (seen.has(r[1])) continue;
+        oldPerShow[r[2]] = (oldPerShow[r[2]] || 0) + 1;
+        if (oldPerShow[r[2]] > 15) continue;
+        seen.add(r[1]); rows.push(r); k++;
+      }
+      kept += k;
+    }
+    oldTotal += kept;
+    console.log(`  ${genre} (pre-2000): ${kept}`);
+  }
+  console.log(`  older programmes: ${oldTotal}`);
 
   // Music documentaries: first the curated shows' archives, then spoken programmes from the BBC's music categories.
   let musicTotal = 0;
