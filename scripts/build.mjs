@@ -266,10 +266,5 @@ for (const [decade, list] of Object.entries(archive)) {
   await writeFile(`dist/decades/${decade}s.json`, JSON.stringify(list));
 }
 await writeFile("dist/index.html", template.replace("/*EPISODES*/[]", data));
-// Design mock-ups get the same data
-try {
-  const mock = await readFile("mockup-dial.html", "utf8");
-  await writeFile("dist/dial-mockup.html", mock.replace("/*EPISODES*/[]", data));
-} catch {}
 await cp("public", "dist", { recursive: true });
 console.log(`Wrote dist/index.html with ${episodes.length} episodes.`);
