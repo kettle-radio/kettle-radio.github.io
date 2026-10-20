@@ -78,9 +78,9 @@ header { text-align: center; }
 .scale .hl { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--glow) 22%, transparent); border-radius: 4px; transition: left .3s, width .3s; pointer-events: none; }
 .dial .band .tuned { display: inline-flex; gap: 8px; align-items: baseline; }
 .anyyear { background: none; border: 1px solid color-mix(in srgb, var(--dial-ink) 40%, transparent); color: var(--dial-ink); border-radius: 999px; font: inherit; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 2px 8px; cursor: pointer; }
-.era-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--btn-soft); border: 1px solid var(--line); border-radius: 999px; }
-.era-toggle button { background: transparent; border: 0; border-radius: 999px; padding: 8px 10px; font: inherit; font-size: 14px; color: var(--muted); cursor: pointer; white-space: nowrap; }
-.era-toggle button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); font-weight: 700; }
+.era-toggle { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid color-mix(in srgb, var(--dial-ink) 35%, transparent); border-radius: 999px; }
+.era-toggle button { background: transparent; border: 0; border-radius: 999px; padding: 3px 9px; font: inherit; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--dial-ink) 70%, transparent); cursor: pointer; white-space: nowrap; }
+.era-toggle button[aria-pressed="true"] { background: color-mix(in srgb, var(--dial-ink) 16%, transparent); color: var(--dial-ink); }
 .era-note { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
 .mock-note { text-align: center; font-size: 13px; color: var(--muted); margin: -16px 0 0; }
 .scale svg { display: block; width: 100%; height: 44px; pointer-events: none; }
@@ -131,12 +131,8 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-
   </header>
 
   <section class="set" aria-label="Your programme">
-    <div class="era-toggle" role="group" aria-label="Year">
-      <button id="anyYear" type="button" aria-pressed="true">Any year</button>
-      <button id="focusBtn" type="button" aria-pressed="false">Focus on a decade</button>
-    </div>
     <div class="dial" id="dial">
-      <div class="band"><span class="tuned"><span id="tunedLabel">Year</span></span><span class="freq" id="freq">1961</span></div>
+      <div class="band"><span class="tuned"><span class="era-toggle" role="group" aria-label="Year"><button id="anyYear" type="button" aria-pressed="true">Any year</button><button id="focusBtn" type="button" aria-pressed="false">Focus on a decade</button></span><span id="tunedLabel" hidden></span></span><span class="freq" id="freq">1961</span></div>
       <div class="scale" id="scale" role="slider" aria-label="Tune to a decade" tabindex="0" aria-valuemin="1950" aria-valuemax="2020" aria-valuetext="Any year">
         <div class="yhl" id="yhl"></div>
         <div class="hl" id="hl" hidden></div>
@@ -293,13 +289,13 @@ function poolFor(today) {
 }
 async function setTuned(d) {
   tuned = d;
-  if (d !== null && d < 2000) { $("tunedLabel").textContent = `Tuning to the ${d}s…`; }
+  if (d !== null && d < 2000) { $("focusBtn").textContent = `Tuning to the ${d}s…`; }
   extra = await loadDecade(d);
   if (tuned !== d) return; // tuned elsewhere while loading
   const today = new Date().toISOString().slice(0, 10);
   const n = d === null ? 0 : poolFor(today).length;
   focusing = false;
-  $("tunedLabel").textContent = d === null ? "Year" : `${d}s · ${n} programmes`;
+  tunedCount = n;
   syncEraToggle();
   $("dial").classList.toggle("tuned", d !== null);
   scale.setAttribute("aria-valuetext", d === null ? "Any year" : d + "s");
@@ -313,17 +309,16 @@ function decadeAt(clientX) {
   return DECADES[Math.min(DECADES.length - 1, Math.max(0, Math.floor((x - X0) / BAND)))];
 }
 let dragging = false, startX = 0;
-var focusing = false;
+var focusing = false, tunedCount = 0;
 function syncEraToggle() {
   $("anyYear").setAttribute("aria-pressed", String(tuned === null && !focusing));
   $("focusBtn").setAttribute("aria-pressed", String(tuned !== null || focusing));
-  $("focusBtn").textContent = tuned !== null && !focusing ? `${tuned}s` : "Focus on a decade";
+  $("focusBtn").textContent = focusing ? "Tap a decade" : tuned !== null ? `${tuned}s · ${tunedCount}` : "Focus on a decade";
   $("dial").classList.toggle("focusing", focusing);
   $("eraNote").hidden = !(focusing || tuned !== null);
 }
 $("focusBtn").addEventListener("click", () => {
   focusing = true;
-  $("tunedLabel").textContent = "Tap a decade";
   syncEraToggle();
   scale.focus();
 });
@@ -347,7 +342,7 @@ scale.addEventListener("keydown", ev => {
   const n = Math.min(DECADES.length - 1, Math.max(0, i + (ev.key === "ArrowRight" ? 1 : -1)));
   setTuned(DECADES[n]);
 });
-$("anyYear").addEventListener("click", () => { focusing = false; if (tuned === null) { $("tunedLabel").textContent = "Year"; syncEraToggle(); } else setTuned(null); });
+$("anyYear").addEventListener("click", () => { focusing = false; if (tuned === null) syncEraToggle(); else setTuned(null); });
 
 function count(name) { try { window.goatcounter && window.goatcounter.count({ path: name, title: name, event: true }); } catch (err) {} }
 go.addEventListener("click", ev => {
