@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="BBC podcasts, stories and comedy, picked at random.">
+<title>Put the Kettle On · knobs mock-up</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://kettle-radio.github.io/">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#2b3a33">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Put the Kettle On">
+<meta property="og:title" content="Put the Kettle On">
+<meta property="og:description" content="BBC podcasts, stories and comedy, picked at random.">
+<meta property="og:url" content="https://kettle-radio.github.io/">
+<meta property="og:image" content="https://kettle-radio.github.io/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Put the Kettle On: an FM radio dial">
+<meta name="twitter:card" content="summary_large_image">
+<script data-goatcounter="https://kettle.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,100&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+
+/* Layout: one calm column; an old wireless set with an FM tuning dial, the chosen programme as its "now playing" card, genres below */
+:root {
+  --bg: #e5ebe3;
+  --panel: #f6f8f3;
+  --ink: #22302a;
+  --muted: #5c6b63;
+  --line: #c4cfc6;
+  --glow: #b5651d;
+  --glow-soft: #f3dcc2;
+  --dial: #2b3a33;
+  --dial-ink: #f1e6d4;
+  --btn-ink: #ffffff;
+  --btn-soft: #eaefe7;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #131a17; --panel: #1b2420; --ink: #e8ece6; --muted: #9eaca4; --line: #2f3c36;
+  --glow: #eaa25c; --glow-soft: #3a2a1b; --dial: #0d1210; --dial-ink: #f1e6d4; --btn-ink: #1d1209; --btn-soft: #222d28; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #131a17; --panel: #1b2420; --ink: #e8ece6; --muted: #9eaca4; --line: #2f3c36;
+  --glow: #eaa25c; --glow-soft: #3a2a1b; --dial: #0d1210; --dial-ink: #f1e6d4; --btn-ink: #1d1209; --btn-soft: #222d28; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px 56px; }
+.wrap { max-width: 36rem; margin: 0 auto; display: grid; gap: 28px; }
+h1 { font-family: var(--display); font-variation-settings: "SOFT" 100; font-weight: 600; font-size: max(2.1rem, calc(min(100vw - 2.25rem, 36rem) / 7.95)); line-height: 1.05; white-space: nowrap; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+header { text-align: center; }
+.lede { margin: 8px auto 0; color: var(--muted); font-size: calc(min(100vw - 2.25rem, 36rem) / 24); white-space: nowrap; }
+
+.set { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 18px; }
+
+/* FM dial */
+.dial { background: var(--dial); color: var(--dial-ink); border-radius: 17px 17px 0 0; margin: -18px -18px 0; padding: 9px 12px 12px; position: relative; overflow: hidden; }
+.dial .band { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 11px; }
+.dial .band > span:first-child { opacity: .75; }
+.dial .freq { font-family: var(--display); font-size: 1.05rem; letter-spacing: 0; text-transform: none; color: var(--glow); font-variant-numeric: tabular-nums; }
+.scale { position: relative; height: 44px; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; }
+.scale .yhl { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--dial-ink) 9%, transparent); border-radius: 4px; transition: left .6s, width .6s; pointer-events: none; }
+.scale { cursor: default; }
+.dial.focusing .scale, .dial.tuned .scale { cursor: pointer; }
+.dial.focusing { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--glow) 55%, transparent); }
+.dial.focusing .scale .lbl { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .dial.focusing .scale .lbl { animation: none; } }
+.scale .hl { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--glow) 22%, transparent); border-radius: 4px; transition: left .3s, width .3s; pointer-events: none; }
+.dial .band .tuned { display: inline-flex; gap: 8px; align-items: baseline; }
+.anyyear { background: none; border: 1px solid color-mix(in srgb, var(--dial-ink) 40%, transparent); color: var(--dial-ink); border-radius: 999px; font: inherit; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 2px 8px; cursor: pointer; }
+.era-toggle { display: inline-flex; gap: 1px; padding: 1px; border: 1px solid color-mix(in srgb, var(--dial-ink) 35%, transparent); border-radius: 999px; }
+.era-toggle button { background: transparent; border: 0; border-radius: 999px; padding: 2px 7px; font: inherit; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--dial-ink) 70%, transparent); cursor: pointer; white-space: nowrap; }
+.era-toggle button[aria-pressed="true"] { background: color-mix(in srgb, var(--dial-ink) 16%, transparent); color: var(--dial-ink); }
+.era-note { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
+.mock-note { text-align: center; font-size: 13px; color: var(--muted); margin: -16px 0 0; }
+.scale svg { display: block; width: 100%; height: 44px; pointer-events: none; }
+.scale svg line { stroke: var(--dial-ink); }
+.scale svg text { fill: var(--dial-ink); font: 11px var(--body); font-variant-numeric: tabular-nums; }
+.needle { position: absolute; top: -4px; bottom: -2px; width: 2px; margin-left: -1px; background: var(--glow); box-shadow: 0 0 10px var(--glow); left: 30%; transition: left .9s cubic-bezier(.25,1.2,.4,1); }
+@media (prefers-reduced-motion: reduce) { .needle { transition: none; } }
+
+/* Programme card */
+.prog { display: grid; gap: 6px; min-height: 9.5em; align-content: start; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.meta .genre { color: var(--glow); font-weight: 700; }
+.show { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-top: 4px; }
+.title { font-family: var(--display); font-variation-settings: "SOFT" 100; font-weight: 600; font-size: clamp(1.35rem, 5vw, 1.7rem); line-height: 1.2; margin: 0; text-wrap: balance; }
+.syn { margin: 2px 0 0; max-width: 58ch; }
+
+.actions { display: grid; gap: 10px; }
+.row-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+.row-sub { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; align-items: center; }
+.knob-btn { display: grid; justify-items: center; gap: 6px; background: none; border: 0; padding: 2px; font: inherit; color: var(--muted); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.knob-btn:disabled { cursor: default; opacity: .45; }
+.knob { width: 62px; height: 62px; border-radius: 50%; position: relative;
+  background: repeating-conic-gradient(from 0deg, #2b3a33 0 5deg, #3d4f46 5deg 10deg);
+  box-shadow: 0 4px 8px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.08) inset;
+  transition: transform .55s cubic-bezier(.3,1.5,.5,1); }
+.knob::after { content: ""; position: absolute; inset: 7px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 30%, #66786e 0%, #3a4a42 45%, #24302a 100%);
+  box-shadow: inset 0 2px 2px rgba(255,255,255,.18), inset 0 -3px 5px rgba(0,0,0,.45); }
+.knob::before { content: ""; position: absolute; top: 10px; left: 50%; width: 3px; height: 15px; margin-left: -1.5px; border-radius: 2px; background: var(--glow); box-shadow: 0 0 6px var(--glow); z-index: 1; }
+.knob-btn:active:not(:disabled) .knob { filter: brightness(.92); }
+.knob-label { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+@media (prefers-reduced-motion: reduce) { .knob { transition: none; } }
+.mock-note { text-align: center; font-size: 13px; color: var(--muted); margin: -16px 0 0; }
+.go { justify-content: center; font-size: 15.5px; display: inline-flex; align-items: center; gap: 10px; background: var(--glow); color: var(--btn-ink); text-decoration: none; font-weight: 700; padding: 12px 18px; border-radius: 999px; }
+.go:hover { filter: brightness(1.06); }
+.go[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+.reroll { background: var(--btn-soft); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 13px 8px; font: inherit; font-size: 16px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.icon-btn { width: 52px; padding: 0; display: inline-grid; place-items: center; }
+.icon-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.reroll:hover { border-color: var(--ink); background: var(--glow-soft); }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-offset: 3px; }
+
+[hidden] { display: none !important; }
+
+/* Filter groups */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips { align-items: center; }
+.chips .hint { width: 100%; font-size: 13px; color: var(--muted); }
+.chip { border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 5px 11px; font: inherit; font-size: 13px; cursor: pointer; }
+.chip:hover { border-color: var(--muted); }
+.chip[aria-pressed="true"] { color: var(--panel); border-color: var(--ink); background: var(--ink); }
+
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Put the Kettle On</h1>
+    <p class="lede">BBC podcasts, stories and comedy, picked at random.</p>
+  </header>
+
+  <section class="set" aria-label="Your programme">
+    <div class="dial" id="dial">
+      <div class="band"><span class="tuned"><span class="era-toggle" role="group" aria-label="Year"><button id="anyYear" type="button" aria-pressed="true">Any year</button><button id="focusBtn" type="button" aria-pressed="false">Focus on a decade</button></span><span id="tunedLabel" hidden></span></span><span class="freq" id="freq">1961</span></div>
+      <div class="scale" id="scale" role="slider" aria-label="Tune to a decade" tabindex="0" aria-valuemin="1950" aria-valuemax="2020" aria-valuetext="Any year">
+        <div class="yhl" id="yhl"></div>
+        <div class="hl" id="hl" hidden></div>
+        <svg id="scaleSvg" viewBox="0 0 400 44" preserveAspectRatio="none"></svg>
+        <div class="needle" id="needle"></div>
+      </div>
+    </div>
+
+    <div class="prog" aria-live="polite">
+      <div class="meta"><span class="genre" id="genre"></span><span id="dur"></span><span id="net"></span><span id="year"></span></div>
+      <div class="show" id="show"></div>
+      <h2 class="title" id="title">Tuning in…</h2>
+      <p class="syn" id="syn"></p>
+    </div>
+
+    <div class="actions">
+      <div class="row-main">
+        <a class="go" id="go" href="https://www.bbc.co.uk/sounds" target="_blank" rel="noopener">▶ Listen on BBC Sounds</a>
+        <button class="reroll icon-btn" id="share" type="button" aria-label="Share this programme" title="Share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>
+      </div>
+      <div class="row-sub">
+        <button class="knob-btn" id="prevKnob" type="button" aria-label="Previous programme" disabled><span class="knob" id="prevDial"></span><span class="knob-label">Previous</span></button>
+        <button class="reroll" id="filterToggle" type="button" aria-expanded="false" aria-controls="filterPanel">Filter</button>
+        <button class="knob-btn" id="reroll" type="button" aria-label="Next programme"><span class="knob" id="nextDial"></span><span class="knob-label">Next</span></button>
+      </div>
+    </div>
+    <div class="chips" id="filterPanel" hidden></div>
+    <p class="era-note" id="eraNote" hidden>Years are usually the original broadcast, but some may be a later repeat.</p>
+  </section>
+
+  <p class="mock-note">Mock-up: press the knobs to turn to the next or previous programme.</p>
+
+
+</div>
+
+<script>
+// Broad groups, built from the BBC's genres
+const GROUPS = {
+  "Drama": ["drama"],
+  "Audiobooks": ["audiobooks"],
+  "Comedy": ["comedy"],
+  "History": ["factual-history"],
+  "Science & Nature": ["factual-scienceandnature"],
+  "Arts & Ideas": ["factual-artscultureandthemedia", "religionandethics"],
+  "Life Stories": ["factual-lifestories", "factual-familiesandrelationships", "factual-disability"],
+  "Documentaries & Crime": ["documentaries", "factual-crimeandjustice-truecrime"],
+  "Food, Travel & Living": ["factual-foodanddrink", "factual-travel", "factual-homesandgardens", "factual-healthandwellbeing"],
+  "Music Documentaries": ["music"],
+};
+const LABELS = {};
+for (const [name, ids] of Object.entries(GROUPS)) for (const id of ids) LABELS[id] = name;
+const groupOf = g => LABELS[g] || (g.startsWith("music") ? "Music Documentaries" : g);
+// [genre, episode pid, show, episode title, synopsis, minutes, station, year]
+const EPS = /*EPISODES*/[];
+
+// Decade dial: 1950s to 2020s, each decade an equal stretch
+const DECADES = [1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020];
+const X0 = 10, W = 380, BAND = W / DECADES.length;
+(function drawScale() {
+  const svg = document.getElementById("scaleSvg"); let s = "";
+  DECADES.forEach((d, i) => {
+    for (let y = 0; y < 10; y++) {
+      const x = X0 + i * BAND + (y + 0.5) / 10 * BAND, mid = y === 5;
+      s += `<line x1="${x}" x2="${x}" y1="${mid ? 26 : 32}" y2="42" stroke-width="0.8" opacity="0.5"/>`;
+    }
+    const x = X0 + i * BAND;
+    s += `<line x1="${x}" x2="${x}" y1="20" y2="42" stroke-width="1.4" opacity="0.9"/>`;
+    s += `<text class="lbl" x="${x + BAND / 2}" y="13" text-anchor="middle">${String(d).slice(2)}s</text>`;
+  });
+  s += `<line x1="${X0 + W}" x2="${X0 + W}" y1="20" y2="42" stroke-width="1.4" opacity="0.9"/>`;
+  svg.innerHTML = s;
+})();
+const pct = x => (x / 400 * 100) + "%";
+function yearX(y) {
+  const yy = Math.min(2029, Math.max(1950, y));
+  const i = Math.floor((yy - 1950) / 10);
+  return X0 + i * BAND + ((yy % 10) + 0.5) / 10 * BAND;
+}
+// Original year where the description says "first broadcast in 1961"; otherwise the BBC's date
+function eraYear(e) {
+  const m = /first (?:broadcast|aired|heard|transmitted)[^0-9]{0,40}((?:19|20)\d\d)/i.exec(e[4] || "");
+  return m ? { year: +m[1], original: true } : { year: +e[7] || 2020, original: false };
+}
+let tuned = null; // decade start, or null for any year
+// Deeper lists for earlier decades, loaded on demand
+const decadeLists = {};
+let extra = [];
+async function loadDecade(d) {
+  if (d === null || d >= 2000) return [];
+  if (!decadeLists[d]) {
+    try { const r = await fetch(`decades/${d}s.json`); decadeLists[d] = r.ok ? await r.json() : []; }
+    catch (err) { decadeLists[d] = []; }
+  }
+  return decadeLists[d];
+}
+const inTuned = e => { if (tuned === null) return true; const y = eraYear(e).year; return tuned === 1950 ? y < 1960 : (y >= tuned && y < tuned + 10); };
+
+const $ = id => document.getElementById(id);
+const go = $("go");
+let last = null;
+function freqFor(pid) { let h = 0; for (const c of pid) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 88 + (h % 200) / 10; }
+function spin(chosen) {
+  const today = new Date().toISOString().slice(0, 10);
+  const pool = poolFor(today);
+  if (!pool.length && !chosen) {
+    go.setAttribute("aria-disabled", "true");
+    for (const id of ["genre", "dur", "net", "year", "show", "syn"]) $(id).textContent = "";
+    $("title").textContent = tuned !== null ? `Nothing from the ${tuned}s in that mix yet. Try another decade.` : "Nothing in that mix at the moment. Try picking another."; $("freq").textContent = "—"; return;
+  }
+  go.removeAttribute("aria-disabled");
+  let e = chosen; if (!e) do { e = pool[Math.floor(Math.random() * pool.length)]; } while (pool.length > 1 && last && e[1] === last[1]);
+  last = e;
+  const [g, pid, show, ep, syn, minsRaw, net, year] = e;
+  const mins = +minsRaw;
+  go.href = "https://www.bbc.co.uk/sounds/play/" + pid;
+  $("genre").textContent = groupOf(g);
+  $("dur").textContent = mins >= 60 ? `${Math.floor(mins / 60)} hr ${mins % 60 ? (mins % 60) + " min" : ""}`.trim() : mins + " min";
+  $("net").textContent = net ? "BBC " + net.replace(/^BBC /, "") : "";
+  const era = eraYear(e);
+  $("year").textContent = era.original ? "first broadcast" : "";
+  $("show").textContent = show;
+  const weak = !ep || ep === show || /^(series \d+|episode \d+|\d{1,2}[\/.]\d{1,2}[\/.]\d{2,4}|\d{1,2} \w+ \d{4})$/i.test(ep);
+  $("title").textContent = weak ? show : ep;
+  $("show").textContent = weak ? "" : show;
+  $("syn").textContent = syn;
+  $("freq").textContent = era.year;
+  $("needle").style.left = pct(yearX(era.year));
+  const di = Math.min(DECADES.length - 1, Math.max(0, Math.floor((Math.min(2029, Math.max(1950, era.year)) - 1950) / 10)));
+  $("yhl").style.left = pct(X0 + di * BAND); $("yhl").style.width = pct(BAND); $("yhl").hidden = tuned !== null;
+  try { history.replaceState(null, "", "#" + pid); } catch (err) {}
+  if (!replaying) { seen = seen.slice(0, pos + 1); seen.push(e); pos = seen.length - 1; }
+  const pk = document.getElementById("prevKnob"); if (pk) pk.disabled = pos <= 0;
+}
+
+// A shared programme that has since left the list: show a simple card that still links to it
+function showShared(pid) {
+  last = null;
+  go.removeAttribute("aria-disabled");
+  go.href = "https://www.bbc.co.uk/sounds/play/" + pid;
+  for (const id of ["genre", "dur", "net", "year", "show"]) $(id).textContent = "";
+  $("genre").textContent = "Shared with you";
+  $("title").textContent = "A programme someone picked for you";
+  $("syn").textContent = "Press Listen to hear it on BBC Sounds, or try another.";
+  $("freq").textContent = "—";
+  $("needle").style.left = pct(X0 + W / 2);
+}
+
+// Tuning: drag or tap the dial to choose a decade
+const scale = $("scale"), hl = $("hl");
+function poolFor(today) {
+  const ids = new Set(), out = [];
+  for (const e of EPS.concat(extra)) {
+    if (ids.has(e[1])) continue;
+    if ((e[8] && e[8] <= today) || (picked.size && !picked.has(groupOf(e[0]))) || !inTuned(e)) continue;
+    ids.add(e[1]); out.push(e);
+  }
+  return out;
+}
+async function setTuned(d) {
+  tuned = d;
+  if (d !== null && d < 2000) { $("focusBtn").textContent = `Tuning to the ${d}s…`; }
+  extra = await loadDecade(d);
+  if (tuned !== d) return; // tuned elsewhere while loading
+  const today = new Date().toISOString().slice(0, 10);
+  const n = d === null ? 0 : poolFor(today).length;
+  focusing = false;
+  tunedCount = n;
+  syncEraToggle();
+  $("dial").classList.toggle("tuned", d !== null);
+  scale.setAttribute("aria-valuetext", d === null ? "Any year" : d + "s");
+  if (d === null) hl.hidden = true;
+  else { hl.hidden = false; hl.style.left = pct(X0 + DECADES.indexOf(d) * BAND); hl.style.width = pct(BAND); }
+  spin();
+}
+function decadeAt(clientX) {
+  const r = scale.getBoundingClientRect();
+  const x = (clientX - r.left) / r.width * 400;
+  return DECADES[Math.min(DECADES.length - 1, Math.max(0, Math.floor((x - X0) / BAND)))];
+}
+let dragging = false, startX = 0;
+var focusing = false, tunedCount = 0;
+function syncEraToggle() {
+  $("anyYear").setAttribute("aria-pressed", String(tuned === null && !focusing));
+  $("focusBtn").setAttribute("aria-pressed", String(tuned !== null || focusing));
+  $("focusBtn").textContent = focusing ? "Tap a decade" : tuned !== null ? `${tuned}s` : "Focus on a decade";
+  $("dial").classList.toggle("focusing", focusing);
+  $("eraNote").hidden = !(focusing || tuned !== null);
+}
+$("focusBtn").addEventListener("click", () => {
+  focusing = true;
+  syncEraToggle();
+  scale.focus();
+});
+const canTune = () => focusing || tuned !== null;
+scale.addEventListener("pointerdown", ev => { if (!canTune()) return; dragging = true; startX = ev.clientX; scale.setPointerCapture(ev.pointerId); $("needle").style.transition = "none"; moveNeedle(ev); });
+scale.addEventListener("pointermove", ev => { if (dragging) moveNeedle(ev); });
+scale.addEventListener("pointerup", ev => {
+  if (!dragging) return; dragging = false; $("needle").style.transition = "";
+  const d = decadeAt(ev.clientX), tap = Math.abs(ev.clientX - startX) < 6;
+  setTuned(tap && d === tuned ? null : d);
+});
+function moveNeedle(ev) {
+  const r = scale.getBoundingClientRect();
+  const x = Math.min(X0 + W, Math.max(X0, (ev.clientX - r.left) / r.width * 400));
+  $("needle").style.left = pct(x);
+}
+scale.addEventListener("keydown", ev => {
+  if (!canTune() || (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight")) return;
+  ev.preventDefault();
+  const i = tuned === null ? (ev.key === "ArrowLeft" ? DECADES.length : -1) : DECADES.indexOf(tuned);
+  const n = Math.min(DECADES.length - 1, Math.max(0, i + (ev.key === "ArrowRight" ? 1 : -1)));
+  setTuned(DECADES[n]);
+});
+$("anyYear").addEventListener("click", () => { focusing = false; if (tuned === null) syncEraToggle(); else setTuned(null); });
+
+function count(name) { try { window.goatcounter && window.goatcounter.count({ path: name, title: name, event: true }); } catch (err) {} }
+go.addEventListener("click", ev => {
+  if (go.getAttribute("aria-disabled")) { ev.preventDefault(); return; }
+  count("listen");
+  setTimeout(() => spin(), 60);
+});
+// Knobs: each press turns the knob a notch, then tunes to the next or previous programme
+var seen = [], pos = -1, replaying = false;
+const turns = { prevDial: 0, nextDial: 0 };
+function turn(id, deg) { turns[id] += deg; $(id).style.transform = `rotate(${turns[id]}deg)`; }
+$("reroll").addEventListener("click", () => {
+  turn("nextDial", 40);
+  if (pos < seen.length - 1) { replaying = true; pos++; spin(seen[pos]); replaying = false; }
+  else spin();
+});
+$("prevKnob").addEventListener("click", () => {
+  if (pos <= 0) return;
+  turn("prevDial", -40);
+  replaying = true; pos--; spin(seen[pos]); replaying = false;
+});
+
+// Share: phone share sheet where available, otherwise copy the link
+const shareBtn = $("share");
+shareBtn.addEventListener("click", async () => {
+  const pid = (location.hash || "").slice(1);
+  const url = "https://kettle-radio.github.io/" + (pid ? "#" + pid : "");
+  const title = $("title").textContent;
+  const text = title ? `${title}: found on Put the Kettle On` : "Put the Kettle On";
+  count("share");
+  if (navigator.share) {
+    try { await navigator.share({ title: "Put the Kettle On", text, url }); } catch (err) {}
+    return;
+  }
+  const icon = shareBtn.innerHTML;
+  try {
+    await navigator.clipboard.writeText(url);
+    shareBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>';
+    shareBtn.title = "Link copied"; shareBtn.setAttribute("aria-label", "Link copied");
+  } catch (err) { shareBtn.title = "Couldn't copy the link"; }
+  setTimeout(() => { shareBtn.innerHTML = icon; shareBtn.title = "Share"; shareBtn.setAttribute("aria-label", "Share this programme"); }, 1800);
+});
+
+// Filter: pick what you're in the mood for (remembered on this device only).
+// Nothing picked = everything.
+const groupNames = Object.keys(GROUPS).filter(n => EPS.some(e => groupOf(e[0]) === n));
+let picked = new Set();
+try {
+  const saved = JSON.parse(localStorage.getItem("kettle-picks") || "null");
+  if (Array.isArray(saved)) picked = new Set(saved.filter(n => groupNames.includes(n)));
+} catch (e) {}
+const panel = $("filterPanel"), toggle = $("filterToggle");
+function syncFilter() {
+  for (const b of panel.querySelectorAll(".chip")) b.setAttribute("aria-pressed", picked.has(b.dataset.g) ? "true" : "false");
+  toggle.textContent = picked.size ? `Filter · ${picked.size}` : "Filter";
+  try { localStorage.setItem("kettle-picks", JSON.stringify([...picked])); } catch (e) {}
+}
+const hint = document.createElement("span");
+hint.className = "hint"; hint.textContent = "Pick what you're in the mood for, or leave blank for anything.";
+panel.appendChild(hint);
+groupNames.forEach((name, i) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.id = "group-" + i; b.dataset.g = name; b.textContent = name;
+  b.addEventListener("click", () => { picked.has(name) ? picked.delete(name) : picked.add(name); syncFilter(); spin(); });
+  panel.appendChild(b);
+});
+toggle.addEventListener("click", () => {
+  panel.hidden = !panel.hidden;
+  toggle.setAttribute("aria-expanded", String(!panel.hidden));
+});
+syncFilter();
+
+// Open on a shared programme if the link has one, e.g. kettle-radio.github.io/#b0b0v37m
+const wanted = (location.hash || "").slice(1);
+if (/^[a-z0-9]{8}$/.test(wanted)) {
+  const hit = EPS.find(e => e[1] === wanted);
+  if (hit) spin(hit); else showShared(wanted);
+} else {
+  spin();
+}
+</script>
+
+</body>
+</html>
