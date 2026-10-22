@@ -81,7 +81,6 @@ header { text-align: center; }
 .era-toggle button { background: transparent; border: 0; border-radius: 999px; padding: 2px 7px; font: inherit; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--dial-ink) 70%, transparent); cursor: pointer; white-space: nowrap; }
 .era-toggle button[aria-pressed="true"] { background: color-mix(in srgb, var(--dial-ink) 16%, transparent); color: var(--dial-ink); }
 .era-note { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
-.mock-note { text-align: center; font-size: 13px; color: var(--muted); margin: -16px 0 0; }
 .scale svg { display: block; width: 100%; height: 44px; pointer-events: none; }
 .scale svg line { stroke: var(--dial-ink); }
 .scale svg text { fill: var(--dial-ink); font: 11px var(--body); font-variant-numeric: tabular-nums; }
@@ -98,7 +97,27 @@ header { text-align: center; }
 
 .actions { display: grid; gap: 10px; }
 .row-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
-.row-sub { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.row-sub { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: end; padding-top: 4px; }
+.knob-btn { display: grid; justify-items: center; gap: 6px; background: none; border: 0; padding: 2px; font: inherit; color: var(--muted); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.knob-btn:disabled { cursor: default; opacity: .45; }
+.knob { width: 58px; height: 58px; border-radius: 50%; position: relative;
+  background: repeating-conic-gradient(from 0deg, #2b3a33 0 5deg, #3d4f46 5deg 10deg);
+  box-shadow: 0 4px 8px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.08) inset;
+  transition: transform .55s cubic-bezier(.3,1.5,.5,1); }
+.knob::after { content: ""; position: absolute; inset: 7px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 30%, #66786e 0%, #3a4a42 45%, #24302a 100%);
+  box-shadow: inset 0 2px 2px rgba(255,255,255,.18), inset 0 -3px 5px rgba(0,0,0,.45); }
+.knob::before { content: ""; position: absolute; top: 10px; left: 50%; width: 3px; height: 15px; margin-left: -1.5px; border-radius: 2px; background: var(--glow); box-shadow: 0 0 6px var(--glow); z-index: 1; }
+.knob-btn:active:not(:disabled) .knob { filter: brightness(.92); }
+.knob-label { white-space: nowrap; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+@media (prefers-reduced-motion: reduce) { .knob { transition: none; } }
+/* Random: the main knob, a little bigger */
+.knob.main { width: 68px; height: 68px; }
+#reroll .knob-label { color: var(--glow); font-weight: 700; }
+/* Share keeps its round button but wears the knob colours */
+#share.icon-btn { border: 0; color: #f1e6d4; background: radial-gradient(circle at 38% 30%, #66786e 0%, #3a4a42 45%, #24302a 100%);
+  box-shadow: 0 3px 6px rgba(0,0,0,.3), inset 0 2px 2px rgba(255,255,255,.18), inset 0 -3px 5px rgba(0,0,0,.45); }
+#share.icon-btn:hover { filter: brightness(1.08); background: radial-gradient(circle at 38% 30%, #66786e 0%, #3a4a42 45%, #24302a 100%); }
 .go { justify-content: center; font-size: 15.5px; display: inline-flex; align-items: center; gap: 10px; background: var(--glow); color: var(--btn-ink); text-decoration: none; font-weight: 700; padding: 12px 18px; border-radius: 999px; }
 .go:hover { filter: brightness(1.06); }
 .go[aria-disabled="true"] { opacity: .45; pointer-events: none; }
@@ -153,13 +172,15 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-
         <button class="reroll icon-btn" id="share" type="button" aria-label="Share this programme" title="Share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>
       </div>
       <div class="row-sub">
-        <button class="reroll" id="reroll" type="button">Try another</button>
-        <button class="reroll" id="filterToggle" type="button" aria-expanded="false" aria-controls="filterPanel">Filter</button>
+        <button class="knob-btn" id="prevKnob" type="button" aria-label="Back to the last programme" disabled><span class="knob" id="prevDial"></span><span class="knob-label">Back</span></button>
+        <button class="knob-btn" id="reroll" type="button" aria-label="Random programme"><span class="knob main" id="nextDial"></span><span class="knob-label">Random</span></button>
+        <button class="knob-btn" id="filterToggle" type="button" aria-expanded="false" aria-controls="filterPanel"><span class="knob" id="filterDial"></span><span class="knob-label" id="filterLabel">Filter</span></button>
       </div>
     </div>
     <div class="chips" id="filterPanel" hidden></div>
     <p class="era-note" id="eraNote" hidden>Years are usually the original broadcast, but some may be a later repeat.</p>
   </section>
+
 
 
 </div>
@@ -259,6 +280,8 @@ function spin(chosen) {
   const di = Math.min(DECADES.length - 1, Math.max(0, Math.floor((Math.min(2029, Math.max(1950, era.year)) - 1950) / 10)));
   $("yhl").style.left = pct(X0 + di * BAND); $("yhl").style.width = pct(BAND); $("yhl").hidden = tuned !== null;
   try { history.replaceState(null, "", "#" + pid); } catch (err) {}
+  if (!replaying) { seen = seen.slice(0, pos + 1); seen.push(e); pos = seen.length - 1; }
+  const pk = document.getElementById("prevKnob"); if (pk) pk.disabled = pos <= 0;
 }
 
 // A shared programme that has since left the list: show a simple card that still links to it
@@ -342,13 +365,34 @@ scale.addEventListener("keydown", ev => {
 });
 $("anyYear").addEventListener("click", () => { focusing = false; if (tuned === null) syncEraToggle(); else setTuned(null); });
 
-function count(name) { try { window.goatcounter && window.goatcounter.count({ path: name, title: name, event: true }); } catch (err) {} }
+function count(path, title) { try { window.goatcounter && window.goatcounter.count({ path, title: title || path, event: true }); } catch (err) {} }
+// Anonymous count of which programmes people click through to or share (no cookies, nothing personal)
+function countProgramme(kind) {
+  if (!last) return count(kind);
+  const [g, pid, show, ep] = last;
+  const name = show + (ep && ep !== show ? " — " + ep : "");
+  count(`${kind}/${show}`.slice(0, 200), `${kind === "listen" ? "Listen" : "Share"}: ${name} (${groupOf(g)})`.slice(0, 300));
+}
 go.addEventListener("click", ev => {
   if (go.getAttribute("aria-disabled")) { ev.preventDefault(); return; }
-  count("listen");
+  countProgramme("listen");
   setTimeout(() => spin(), 60);
 });
-$("reroll").addEventListener("click", () => spin());
+// Knobs: each press turns the knob a notch, then tunes to the next or previous programme
+var seen = [], pos = -1, replaying = false;
+const turns = { prevDial: 0, nextDial: 0, filterDial: 0 };
+function turn(id, deg) { turns[id] += deg; $(id).style.transform = `rotate(${turns[id]}deg)`; }
+$("reroll").addEventListener("click", () => {
+  turn("nextDial", 40);
+  if (pos < seen.length - 1) { replaying = true; pos++; spin(seen[pos]); replaying = false; }
+  else spin();
+});
+$("filterToggle").addEventListener("click", () => turn("filterDial", $("filterPanel").hidden ? -40 : 40));
+$("prevKnob").addEventListener("click", () => {
+  if (pos <= 0) return;
+  turn("prevDial", -40);
+  replaying = true; pos--; spin(seen[pos]); replaying = false;
+});
 
 // Share: phone share sheet where available, otherwise copy the link
 const shareBtn = $("share");
@@ -357,7 +401,7 @@ shareBtn.addEventListener("click", async () => {
   const url = "https://kettle-radio.github.io/" + (pid ? "#" + pid : "");
   const title = $("title").textContent;
   const text = title ? `${title}: found on Put the Kettle On` : "Put the Kettle On";
-  count("share");
+  countProgramme("share");
   if (navigator.share) {
     try { await navigator.share({ title: "Put the Kettle On", text, url }); } catch (err) {}
     return;
@@ -382,7 +426,7 @@ try {
 const panel = $("filterPanel"), toggle = $("filterToggle");
 function syncFilter() {
   for (const b of panel.querySelectorAll(".chip")) b.setAttribute("aria-pressed", picked.has(b.dataset.g) ? "true" : "false");
-  toggle.textContent = picked.size ? `Filter · ${picked.size}` : "Filter";
+  $("filterLabel").textContent = picked.size ? `Filter · ${picked.size}` : "Filter";
   try { localStorage.setItem("kettle-picks", JSON.stringify([...picked])); } catch (e) {}
 }
 const hint = document.createElement("span");
