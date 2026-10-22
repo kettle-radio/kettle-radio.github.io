@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kettle-radio.github.io/sitemap.xml
