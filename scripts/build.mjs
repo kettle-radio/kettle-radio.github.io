@@ -267,7 +267,7 @@ for (const [decade, list] of Object.entries(archive)) {
 }
 await writeFile("dist/index.html", template.replace("/*EPISODES*/[]", data));
 // Design mock-ups get the same data
-for (const name of ["knobs-mockup.html", "knobs2-mockup.html"]) {
+for (const name of ["knobs-mockup.html", "knobs2-mockup.html", "knobs3-mockup.html"]) {
   try { await writeFile(`dist/${name}`, (await readFile(name, "utf8")).replace("/*EPISODES*/[]", data)); } catch {}
 }
 await cp("public", "dist", { recursive: true });
