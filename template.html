@@ -140,17 +140,17 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-
 
 
 /* ===== Calm design: the dial is the only radio hardware; everything else flat, and a bigger, magazine-style programme title ===== */
-.title { font-size: clamp(1.75rem, 7.5vw, 2.4rem); line-height: 1.12; letter-spacing: -0.01em; }
+.title { font-size: clamp(1.45rem, 5.8vw, 1.85rem); line-height: 1.15; letter-spacing: -0.01em; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
 .show { font-size: 12px; letter-spacing: .12em; }
-.syn { font-size: 17px; line-height: 1.5; color: var(--muted); }
-.prog { gap: 8px; min-height: 11em; }
-.row-sub { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: stretch; padding-top: 0; }
+.syn { font-size: 16px; line-height: 1.5; color: var(--muted); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.prog { gap: 6px; height: 14.5em; overflow: hidden; align-content: start; }
+.row-sub { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr); gap: 10px; align-items: stretch; padding-top: 0; }
 .knob-btn { display: block; background: var(--dial); border: 1px solid var(--dial); border-radius: 999px; padding: 12px 6px; color: var(--dial-ink); opacity: 1; }
 .knob-btn:hover:not(:disabled) { filter: brightness(1.15); }
 .knob-btn:disabled { opacity: .45; }
 .knob-btn .knob { display: none; }
 .knob-label, #reroll .knob-label { font-size: 15px; letter-spacing: 0; text-transform: none; color: inherit; font-weight: 400; }
-#reroll { background: var(--dial); border-color: var(--glow); color: var(--glow); }
+#reroll { background: color-mix(in srgb, var(--dial) 62%, #000); border-color: color-mix(in srgb, var(--dial) 62%, #000); color: #fff; }
 #reroll .knob-label { font-weight: 700; }
 #share.icon-btn { background: var(--dial); border: 1px solid var(--dial); box-shadow: none; color: var(--dial-ink); }
 #share.icon-btn:hover { background: var(--dial); filter: brightness(1.15); }
