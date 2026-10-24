@@ -8,6 +8,8 @@
 <link rel="canonical" href="https://kettle-radio.github.io/">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Kettle">
 <meta name="theme-color" content="#2b3a33">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Put the Kettle On">
@@ -155,6 +157,9 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-
 #share.icon-btn { background: var(--dial); border: 1px solid var(--dial); box-shadow: none; color: var(--dial-ink); }
 #share.icon-btn:hover { background: var(--dial); filter: brightness(1.15); }
 .mock-note { text-align: center; font-size: 13px; color: var(--muted); margin: -16px 0 0; }
+.install { margin: -14px 0 0; text-align: center; font-size: 13px; color: var(--muted); display: grid; gap: 6px; justify-items: center; }
+.install button { background: none; border: 0; padding: 4px 6px; font: inherit; color: var(--muted); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; cursor: pointer; }
+.install button:hover { color: var(--ink); }
 </style>
 </head>
 <body>
@@ -197,6 +202,11 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-
     <div class="chips" id="filterPanel" hidden></div>
     <p class="era-note" id="eraNote" hidden>Years are usually the original broadcast, but some may be a later repeat.</p>
   </section>
+
+  <div class="install" id="install" hidden>
+    <button type="button" id="installBtn">Add to home screen</button>
+    <span id="iosHint" hidden>Tap the Share button, then “Add to Home Screen”.</span>
+  </div>
 
 
 
@@ -470,6 +480,24 @@ if (/^[a-z0-9]{8}$/.test(wanted)) {
 } else {
   spin();
 }
+
+// Add to home screen: Chrome's install box on Android; instructions on iPhone/iPad
+(function () {
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if (standalone) return;
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+  const box = $("install"), btn = $("installBtn"), hint = $("iosHint");
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (/macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  let deferred = null;
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; box.hidden = false; });
+  window.addEventListener("appinstalled", () => { box.hidden = true; count("installed"); });
+  if (ios) box.hidden = false;
+  btn.addEventListener("click", async () => {
+    count("install");
+    if (deferred) { deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; box.hidden = true; }
+    else if (ios) hint.hidden = !hint.hidden;
+  });
+})();
 </script>
 
 </body>
