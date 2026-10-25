@@ -205,7 +205,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--glow); outline-
 
   <div class="install" id="install" hidden>
     <button type="button" id="installBtn">Optional: add to your home screen</button>
-    <span id="iosHint" hidden>Tap the Share button, then “Add to Home Screen”. The site works just as well in your browser.</span>
+    <span id="iosHint" hidden>Tap the Share button, then “Add to Home Screen”.</span>
   </div>
 
 
@@ -491,7 +491,7 @@ if (/^[a-z0-9]{8}$/.test(wanted)) {
   let deferred = null;
   window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; box.hidden = false; });
   window.addEventListener("appinstalled", () => { box.hidden = true; count("installed"); });
-  if (ios) box.hidden = false;
+  if (ios) { btn.textContent = "Add to home screen"; box.hidden = false; }
   btn.addEventListener("click", async () => {
     count("install");
     if (deferred) { deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; box.hidden = true; }
